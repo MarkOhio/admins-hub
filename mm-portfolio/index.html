@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://htyjbqoudvpikxdttdos.supabase.co; media-src blob: https://htyjbqoudvpikxdttdos.supabase.co; connect-src https://htyjbqoudvpikxdttdos.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'none'">
+<title>Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0d0b;--ink:#c8a77c;--ink2:#eadfca;--b2:#100e0b;--fd:'UnifrakturCook',serif;--fb:'Cormorant Garamond',Georgia,serif}
+*{box-sizing:border-box;margin:0;scrollbar-width:thin;scrollbar-color:var(--ink) transparent}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--ink);border-radius:6px}
+html,body{min-height:100%;background:var(--bg);color:var(--ink2);font:18px var(--fb)}
+body{background:radial-gradient(ellipse at 20% 0,#1c1812,var(--bg) 60%) fixed}
+button,input,textarea,select{font:inherit;color:var(--ink)}button{background:none;cursor:pointer}
+h1,h2,h3{font-family:var(--fd);color:var(--ink);font-weight:700}
+.wrap{max-width:980px;margin:0 auto;padding:16px 16px 60px;min-height:100dvh}
+.btn{border:1px solid var(--ink);border-radius:50px;padding:.45em 1.2em;box-shadow:0 -4px 8px -5px #c8a77caa,0 4px 8px -5px #c8a77caa;transition:.3s}
+.btn:hover{background:#c8a77c22;color:var(--ink2)}.btn:disabled{opacity:.4}
+.pt{--pw:12px;--b:var(--b2);position:relative;border:0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);margin:0 var(--pw);background:var(--b);padding:.5em 1.4em;box-shadow:0 -4px 8px -5px var(--ink),0 4px 8px -5px var(--ink)}
+.pt:hover{--b:#2a2217}
+.pt::before,.pt::after{content:"";position:absolute;top:-1px;bottom:-1px;width:var(--pw)}
+.pt::before{left:calc(-1*var(--pw));background:linear-gradient(to bottom right,#0000 calc(50% - 1px),var(--ink) calc(50% - 1px) 50%,var(--b) 50%) 0 0/100% 50% no-repeat,linear-gradient(to top right,#0000 calc(50% - 1px),var(--ink) calc(50% - 1px) 50%,var(--b) 50%) 0 100%/100% 50% no-repeat}
+.pt::after{right:calc(-1*var(--pw));background:linear-gradient(to bottom left,#0000 calc(50% - 1px),var(--ink) calc(50% - 1px) 50%,var(--b) 50%) 0 0/100% 50% no-repeat,linear-gradient(to top left,#0000 calc(50% - 1px),var(--ink) calc(50% - 1px) 50%,var(--b) 50%) 0 100%/100% 50% no-repeat}
+input[type=checkbox]{appearance:none;width:22px;height:22px;border:1px solid var(--ink);border-radius:3px;position:relative;margin:0}
+input[type=checkbox]:checked::after{content:"";position:absolute;left:-3px;top:-12px;width:34px;height:34px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cpath d='M3 18 L12 30 L31 3' fill='none' stroke='%23eadfca' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat}
+input:not([type=checkbox]):not([type=file]),textarea,select{width:100%;background:#14120f;border:1px solid var(--ink);border-radius:10px;padding:.5em .8em}
+select option{background:#14120f}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.top h1{font-size:2rem}
+.wallet{border:1px solid var(--ink);border-radius:22px;padding:18px;background:linear-gradient(160deg,#2a2217,#14120f);box-shadow:0 0 30px #c8a77c33;margin-bottom:16px}
+.wallet{position:relative}.wallet small{opacity:.8}
+.pub{position:absolute;top:14px;right:14px;display:flex;align-items:center;gap:8px;border:1px solid #c8a77c55;border-radius:50px;padding:.4em 1em;background:#14120f;color:#c8a77c88;opacity:.55;cursor:default;transition:.3s}
+.pub i{width:9px;height:9px;border-radius:50%;background:#5b5346;display:inline-block}
+.pub.on{opacity:1;color:#14120f;background:linear-gradient(160deg,#f0d9a8,#c8a77c);border-color:#f0d9a8;box-shadow:0 0 18px #f0d9a8aa;cursor:pointer;font-weight:700}
+.pub.on i{background:#b3261e;box-shadow:0 0 0 0 #b3261e;animation:pls 1.4s infinite}
+.pub.busy{opacity:.7;pointer-events:none}
+.pubnote{position:absolute;top:52px;right:16px;font-size:.72rem;opacity:.7;text-align:right;max-width:55%}
+@keyframes pls{0%{box-shadow:0 0 0 0 #b3261e99}100%{box-shadow:0 0 0 10px #b3261e00}}
+.an{display:grid;gap:14px}.an .k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.an .c{border:1px solid #c8a77c88;border-radius:16px;padding:12px;background:#14120f99}.an .c b{display:block;font-size:1.7rem;color:var(--ink)}.an .c small{opacity:.8}
+.an h2{font-size:1rem;margin:6px 0 0;color:var(--ink)}.an .bar{display:grid;grid-template-columns:110px 1fr 44px;gap:8px;align-items:center;font-size:.85rem;margin:3px 0}.an .bar span.f{display:block;height:10px;border-radius:6px;background:linear-gradient(90deg,#c8a77c,#f0d9a8)}.an select{background:#14120f;color:inherit;border:1px solid #c8a77c88;border-radius:10px;padding:.4em .8em}.amt{font:700 2.2rem var(--fd);color:var(--ink2);margin:6px 0 12px;letter-spacing:.04em}
+.wallet .r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.search{margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}}
+.tile{position:relative;text-align:left;border:1px solid #c8a77c88;border-radius:18px;padding:14px;min-height:110px;display:flex;flex-direction:column;justify-content:space-between;background:#14120f99;transition:.3s}
+.tile:hover{border-color:var(--ink);box-shadow:0 0 18px #c8a77c55}
+.tile .g{font:700 1.8rem var(--fd);color:var(--ink)}.tile b{display:block;color:var(--ink2);font-weight:600}.tile small{opacity:.7;font-size:.8rem}
+.dot{position:absolute;top:10px;right:10px;min-width:22px;height:22px;border-radius:11px;background:#d33;color:#fff;font:600 .75rem var(--fb);display:grid;place-items:center;padding:0 6px;box-shadow:0 0 10px #d33}
+.list{display:grid;gap:8px;margin:14px 0}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #c8a77c66;border-radius:14px;padding:12px 14px;text-align:left;width:100%}
+.row:hover{border-color:var(--ink)}.row small{opacity:.7}
+.f{display:grid;gap:4px;margin-bottom:12px}.f>span{font-size:.85rem;opacity:.85}
+.f.inl{grid-template-columns:auto 1fr;align-items:center;gap:10px}
+.kids{border:1px solid #c8a77c55;border-radius:14px;padding:12px;margin-bottom:14px}
+.kid{border-bottom:1px solid #c8a77c44;padding-bottom:8px;margin-bottom:10px}
+.act{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.img img{max-width:200px;border:1px solid var(--ink);border-radius:8px;margin-bottom:6px;display:none}
+.modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;z-index:50;padding:16px}
+.mb{width:min(94vw,380px);border:6px double var(--ink);background:#100e0b;padding:18px;border-radius:6px;display:grid;gap:12px}
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:4dvh;display:grid;gap:8px;z-index:99}
+.toast{border:1px solid var(--ink);background:#100e0b;padding:.6em 1.1em;border-radius:10px;box-shadow:0 0 16px #c8a77c66;font-size:.9rem}
+.login{max-width:360px;margin:18dvh auto 0;display:grid;gap:12px;padding:0 16px}.login h1{text-align:center;font-size:2.4rem}
+audio{width:100%;margin:6px 0}
+</style></head><body>
+<div id="app"></div><div id="toasts"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* Admin: runs with the PUBLIC key only. Every write is gated by row level security (is_admin()). Never put the service role key here. */
+const sb=supabase.createClient('https://htyjbqoudvpikxdttdos.supabase.co','sb_publishable_hNlfUZoE_RCClnwRFAqJpA_BfJQkgmL');
+const $=(s,r=document)=>r.querySelector(s),el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const app=$('#app'),toast=m=>{const t=el('div','toast',String(m));$('#toasts').append(t);setTimeout(()=>t.remove(),3500)};
+const naira=k=>'₦'+(Number(k)/100).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});
+const btn=(t,fn,c='btn')=>{const b=el('button',c,t);b.type='button';b.onclick=fn;return b};
+const ask=(title,label,type='text')=>new Promise(res=>{const m=el('div','modal'),f=el('form','mb'),i=el('input');i.type=type;if(type==='number'){i.step='0.01';i.min='0'}i.required=true;i.autocomplete='off';
+ const r=el('div','act');r.append(btn('Cancel',()=>{m.remove();res(null)}),Object.assign(el('button','btn pt','OK'),{type:'submit'}));f.append(el('h3',null,title),Object.assign(el('span',null,label)),i,r);
+ f.onsubmit=e=>{e.preventDefault();m.remove();res(i.value)};m.append(f);document.body.append(m);i.focus()});
+/* ===== auth ===== */
+async function init(){const{data:{session}}=await sb.auth.getSession();session?enter():login()}
+function login(){app.textContent='';const f=el('form','login'),e=el('input'),p=el('input');e.type='email';e.placeholder='Email';e.autocomplete='username';e.required=true;p.type='password';p.placeholder='Password';p.autocomplete='current-password';p.required=true;
+ f.append(el('h1',null,'Admin'),e,p,Object.assign(el('button','btn pt','Sign in'),{type:'submit'}));
+ f.onsubmit=async ev=>{ev.preventDefault();const{error}=await sb.auth.signInWithPassword({email:e.value.trim(),password:p.value});if(error)return toast('Sign in failed');enter()};app.append(f)}
+async function enter(){const{data:a}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+ if(a&&a.nextLevel==='aal2'&&a.currentLevel!=='aal2'){const{data:fl}=await sb.auth.mfa.listFactors(),fac=fl&&fl.totp&&fl.totp[0];if(fac){const code=await ask('Two-step code','6-digit code from your authenticator');if(!code){await sb.auth.signOut();return login()}
+  const{error}=await sb.auth.mfa.challengeAndVerify({factorId:fac.id,code:code.trim()});if(error){toast('Wrong code');await sb.auth.signOut();return login()}}}
+ const{data:ok}=await sb.rpc('is_admin');if(!ok){await sb.auth.signOut();toast('This account is not an admin');return login()}route()}
+/* ===== image upload: real file check + re-encode to WebP (strips anything hidden in the file) ===== */
+async function uploadImage(file,bucket){if(file.size>8*1024*1024)throw new Error('Image too large (max 8 MB)');const h=new Uint8Array(await file.slice(0,12).arrayBuffer());const is=(a,o=0)=>a.every((b,i)=>h[o+i]===b);
+ if(!(is([0x89,0x50,0x4E,0x47])||is([0xFF,0xD8,0xFF])||(is([0x52,0x49,0x46,0x46])&&is([0x57,0x45,0x42,0x50],8))))throw new Error('Not a real PNG, JPEG or WebP file');
+ const bm=await createImageBitmap(file),sc=Math.min(1,1200/bm.width),cv=document.createElement('canvas');cv.width=Math.round(bm.width*sc);cv.height=Math.round(bm.height*sc);cv.getContext('2d').drawImage(bm,0,0,cv.width,cv.height);
+ const blob=await new Promise(r=>cv.toBlob(r,'image/webp',.85));if(!blob||blob.size>3*1024*1024)throw new Error('Image too large after compression');
+ const path=crypto.randomUUID()+'.webp',{error}=await sb.storage.from(bucket).upload(path,blob,{contentType:'image/webp',upsert:false});if(error)throw error;return path}
+/* ===== section definitions (each maps to a table; limits match the database) ===== */
+const SLUG=/^[a-z0-9]+(-[a-z0-9]+)*$/,HTTPS=/^https:\/\/\S+$/,LINK=/^(https:\/\/|mailto:|tel:)\S+$/;
+const S={
+ portfolio:{t:'Portfolio',table:'portfolio_items',order:['created_at',false],row:r=>[r.title,r.status+' · /'+r.slug],
+  fields:[{k:'title',l:'Title (max 40)',max:40,req:1},{k:'slug',l:'Slug (a-z, 0-9, dashes)',max:60,req:1,pattern:SLUG},{k:'summary',l:'Short description (max 240)',type:'textarea',max:240,req:1},{k:'details',l:'Details (max 5000)',type:'textarea',max:5000},{k:'live_url',l:'Live link (https)',pattern:HTTPS,max:300},{k:'cta_label',l:'Button text',max:40},{k:'status',l:'Status',type:'select',opts:['draft','published']},{k:'cover_image_path',l:'Card image',type:'image',bucket:'portfolio-images'}],
+  kids:[{table:'portfolio_item_labels',t:'Labels (max 4, 2 can show on phone)',max:4,fields:[{k:'header',l:'Header (max 30)',max:30,req:1},{k:'body',l:'Text (max 120)',max:120,req:1},{k:'corner',l:'Corner',type:'select',opts:['tl','tr','bl','br']},{k:'show_on_phone',l:'Show on phone',type:'bool'},{k:'anchor_x',l:'Point on card, across (0-1)',type:'number',step:'0.05',min:0,max:1},{k:'anchor_y',l:'Point on card, down (0-1)',type:'number',step:'0.05',min:0,max:1}]},
+   {table:'portfolio_item_links',t:'User sites (max 3)',max:3,fields:[{k:'label',l:'Name (max 30)',max:30,req:1},{k:'url',l:'Link (https)',pattern:HTTPS,req:1}]}]},
+ tiers:{t:'Packages',table:'pricing_tiers',order:['sort_order',true],row:r=>[r.name,naira(r.price_kobo)+(r.is_active?'':' · hidden')],fields:[{k:'name',l:'Name',max:40,req:1},{k:'slug',l:'Slug',max:60,req:1,pattern:SLUG},{k:'description',l:'Description (max 300)',type:'textarea',max:300},{k:'price_kobo',l:'Price (naira)',type:'money',req:1},{k:'features',l:'Features (one per line)',type:'lines'},{k:'info',l:'Tooltip text (max 300)',type:'textarea',max:300},{k:'sort_order',l:'Order',type:'number'},{k:'is_active',l:'Visible',type:'bool'}]},
+ addons:{t:'Monthly services',table:'pricing_addons',order:['sort_order',true],row:r=>[r.name,naira(r.monthly_price_kobo)+' / month'],fields:[{k:'name',l:'Name',max:60,req:1},{k:'slug',l:'Slug',max:60,req:1,pattern:SLUG},{k:'description',l:'Description (max 300)',type:'textarea',max:300},{k:'monthly_price_kobo',l:'Monthly price (naira)',type:'money',req:1},{k:'info',l:'Tooltip text (max 300)',type:'textarea',max:300},{k:'sort_order',l:'Order',type:'number'},{k:'is_active',l:'Visible',type:'bool'}]},
+ timeline:{t:'Delivery rules',table:'timeline_rules',order:['min_months',true],row:r=>[r.min_months+(r.max_months?'-'+r.max_months:'+')+' months',naira(r.surcharge_kobo)],fields:[{k:'min_months',l:'From (months)',type:'number',req:1,min:1},{k:'max_months',l:'To (months, empty = no limit)',type:'number',min:1},{k:'surcharge_kobo',l:'Surcharge (naira)',type:'money',req:1}]},
+ socials:{t:'Contact links',table:'contact_socials',order:['sort_order',true],row:r=>[r.letter+'  '+r.name,r.url],fields:[{k:'letter',l:'Letter (1 character)',max:1,req:1},{k:'name',l:'Name',max:40,req:1},{k:'url',l:'Link (https, mailto or tel)',pattern:LINK,req:1},{k:'sort_order',l:'Order',type:'number'},{k:'is_active',l:'Visible',type:'bool'}]},
+ content:{t:'Site text',table:'site_content',pk:'key',order:['key',true],row:r=>[r.title,r.key],fields:[{k:'key',l:'Key (a-z, 0-9, . _ -)',max:60,req:1,pattern:/^[a-z0-9._-]+$/,lockOnEdit:1},{k:'title',l:'Title',req:1,max:120},{k:'body',l:'Text',type:'textarea',req:1,max:20000}]},
+ requests:{t:'Custom requests',table:'custom_requests',order:['created_at',false],noAdd:1,row:r=>[r.name+(r.status==='new'?'  ● new':''),(r.contact_email||r.contact_handle||'')],fields:[{k:'name',l:'Name',ro:1},{k:'contact_email',l:'Email',ro:1},{k:'contact_handle',l:'Phone / handle',ro:1},{k:'description',l:'Description',type:'textarea',ro:1},{k:'status',l:'Status',type:'select',opts:['new','contacted','quoted','closed']}],audio:1},
+ quotes:{t:'Quotes',table:'quotes',order:['created_at',false],noAdd:1,noDel:1,row:r=>[r.customer_name,r.status+' · '+naira(r.total_kobo)],fields:[{k:'customer_name',l:'Name',ro:1},{k:'customer_email',l:'Email',ro:1},{k:'customer_contact',l:'Contact',ro:1},{k:'timeline_months',l:'Months',ro:1},{k:'total_kobo',l:'Total (naira)',type:'money',ro:1},{k:'status',l:'Status',type:'select',opts:['draft','sent','deposit_paid','fully_paid','cancelled','expired']}]},
+ payments:{t:'Payments',table:'payments',order:['created_at',false],noAdd:1,noDel:1,ro:1,markSeen:1,row:r=>[naira(r.amount_kobo)+' · '+r.kind,r.status+' · '+r.reference],fields:[{k:'reference',l:'Reference',ro:1},{k:'kind',l:'Kind',ro:1},{k:'amount_kobo',l:'Amount (naira)',type:'money',ro:1},{k:'status',l:'Status',ro:1},{k:'verified_at',l:'Verified at',ro:1}]},
+ subs:{t:'Newsletter',table:'newsletter_subscribers',order:['created_at',false],noAdd:1,row:r=>[r.email,r.status],fields:[{k:'email',l:'Email',ro:1},{k:'status',l:'Status',type:'select',opts:['pending','active','unsubscribed']},{k:'consent_at',l:'Consent given',ro:1}],head:(box,rows)=>{box.append(btn('Copy active emails',async()=>{const e=rows.filter(r=>r.status==='active').map(r=>r.email).join(', ');try{await navigator.clipboard.writeText(e);toast(rows.filter(r=>r.status==='active').length+' emails copied')}catch(x){toast('Copy failed')}}))}},
+ errors:{t:'Error log',table:'error_groups',noAdd:1,ro:1,order:['last_seen',false],row:r=>[r.message.slice(0,70),r.occurrences+' times · '+r.affected_sessions+' sessions · '+new Date(r.last_seen).toLocaleString()],fields:[{k:'message',l:'Message',type:'textarea',ro:1},{k:'app',l:'App',ro:1},{k:'occurrences',l:'Times',ro:1},{k:'affected_sessions',l:'Sessions',ro:1}],clear:1}
+};
+const TILES=[['portfolio','◈','Portfolio','Add and edit projects'],['tiers','❖','Packages','Prices and features'],['addons','✦','Monthly services','Optional add-ons'],['timeline','◷','Delivery rules','Time surcharges'],['socials','❂','Contact links','Social icons'],['content','❡','Site text','Home, About and messages'],['requests','✉','Custom requests','Project enquiries'],['quotes','▤','Quotes','Invoices sent'],['payments','₦','Payments','Paystack receipts'],['subs','✎','Newsletter','Subscribers'],['analytics','▥','Analytics','Visitors and returns'],['errors','⚠','Error log','Site problems']];
+/* ===== dashboard ===== */
+async function dash(){app.textContent='';const w=el('div','wrap'),top=el('div','top');top.append(el('h1',null,'Control'),btn('Sign out',async()=>{await sb.auth.signOut();login()}));
+ const card=el('div','wallet'),amt=el('div','amt');let bal=0;const hid=()=>localStorage.getItem('hide')==='1',paint=()=>{amt.textContent=hid()?'₦ ——————':naira(bal)};
+ const{data:wd}=await sb.from('admin_wallet').select('balance_kobo').single();bal=wd?Number(wd.balance_kobo):0;paint();
+ const adj=async s=>{const v=await ask(s>0?'Add money':'Take out money','Amount in naira','number');if(!v)return;const k=Math.round(Number(v)*100);if(!(k>0))return toast('Enter an amount above 0');
+  const{data,error}=await sb.rpc('adjust_wallet',{p_delta:s*k});if(error)return toast(error.message);bal=Number(data);paint()};
+ const r=el('div','r');r.append(btn('+  Add',()=>adj(1)),btn('−  Take out',()=>adj(-1)),btn(hid()?'Show':'Hide',function(){localStorage.setItem('hide',hid()?'0':'1');this.textContent=hid()?'Show':'Hide';paint()}));
+ card.append(el('small',null,'Paystack balance through this site'),amt,r);
+ const pub=el('button','pub'),pdot=el('i'),plab=el('span',null,'Publish'),pnote=el('div','pubnote');pub.type='button';pub.append(pdot,plab);card.append(pub,pnote);
+ let pend=false;const ago=t=>{if(!t)return 'never';const m=Math.round((Date.now()-new Date(t))/60000);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'};
+ const pstate=async()=>{if(!document.body.contains(pub))return;const{data}=await sb.from('site_publish_state').select('pending,last_published_at').maybeSingle();if(!data)return;pend=!!data.pending;pub.classList.toggle('on',pend);plab.textContent=pend?'Publish changes':'Published';pnote.textContent=pend?'Changes waiting. Last published '+ago(data.last_published_at):'Live site is up to date. Last published '+ago(data.last_published_at)};
+ pub.onclick=async()=>{if(!pend)return toast('Nothing new to publish.');pub.classList.add('busy');plab.textContent='Starting…';
+  const{data,error}=await sb.functions.invoke('trigger-rebuild',{body:{}});pub.classList.remove('busy');
+  if(error){let m='Could not start the build.';try{const j=await error.context.json();m=j.message||j.error||m}catch(e){}toast(m);return pstate()}
+  toast(data&&data.message?data.message:'Build started.');pstate()};
+ setTimeout(pstate,50);const ptimer=setInterval(()=>{if(!document.body.contains(pub))return clearInterval(ptimer);pstate()},15000);
+ const q=el('input','search');q.placeholder='Search activities...';q.type='search';const g=el('div','grid');
+ const tiles=TILES.map(x=>{const b=el('button','tile'),gl=el('span','g',x[1]),d=el('div');d.append(el('b',null,x[2]),el('small',null,x[3]));b.append(gl,d);b.onclick=()=>{location.hash='#/s/'+x[0]};b.dataset.k=(x[2]+' '+x[3]).toLowerCase();g.append(b);return[x[0],b]});
+ q.oninput=()=>tiles.forEach(([,b])=>b.style.display=b.dataset.k.includes(q.value.toLowerCase())?'':'none');
+ w.append(top,card,q,g);app.append(w);
+ const cnt=async(p,k)=>{const{count}=await p;if(count){const b=tiles.find(t=>t[0]===k)[1];b.append(el('span','dot',String(count)))}};
+ cnt(sb.from('payments').select('id',{count:'exact',head:true}).is('seen_at',null),'payments');
+ cnt(sb.from('custom_requests').select('id',{count:'exact',head:true}).eq('status','new'),'requests');
+ cnt(sb.from('error_events').select('id',{count:'exact',head:true}).gte('created_at',new Date(Date.now()-864e5).toISOString()),'errors')}
+/* ===== generic section ===== */
+function fld(f,v){const w=el('label','f'+(f.type==='bool'?' inl':''));let i,get;const sp=el('span',null,f.l);
+ if(f.type==='textarea'||f.type==='lines'){i=el('textarea');i.rows=f.type==='lines'?5:4;i.value=f.type==='lines'?(v||[]).join('\n'):(v??'');get=()=>f.type==='lines'?i.value.split('\n').map(s=>s.trim()).filter(Boolean):(i.value.trim()||null)}
+ else if(f.type==='select'){i=el('select');f.opts.forEach(o=>{const op=el('option',null,o);op.value=o;i.append(op)});i.value=v??f.opts[0];get=()=>i.value}
+ else if(f.type==='bool'){i=el('input');i.type='checkbox';i.checked=!!v;get=()=>i.checked}
+ else if(f.type==='money'){i=el('input');i.type='number';i.min='0';i.step='0.01';i.value=v==null?'':Number(v)/100;get=()=>i.value===''?null:Math.round(Number(i.value)*100)}
+ else if(f.type==='image'){i=el('div','img');const pv=el('img'),fi=el('input');fi.type='file';fi.accept='image/png,image/jpeg,image/webp';let cur=v||null;
+  const show=()=>{if(cur){pv.src=sb.storage.from(f.bucket).getPublicUrl(cur).data.publicUrl;pv.style.display='block'}else pv.style.display='none'};show();
+  fi.onchange=async()=>{const fl=fi.files[0];if(!fl)return;try{cur=await uploadImage(fl,f.bucket);show();toast('Image uploaded')}catch(e){toast(e.message||'Upload failed');fi.value=''}};i.append(pv,fi);get=()=>cur}
+ else{i=el('input');i.type=f.type==='number'?'number':'text';if(f.type==='number'){i.step=f.step||'1';if(f.min!=null)i.min=f.min;if(f.max!=null)i.max=f.max}i.value=v??'';get=()=>{const s=i.value.trim();return s===''?null:(f.type==='number'?Number(s):s)}}
+ if(f.max&&f.type!=='number'&&'maxLength' in i)i.maxLength=f.max;if(f.ro&&'disabled' in i)i.disabled=true;
+ if(f.type==='bool')w.append(i,sp);else w.append(sp,i);return{node:w,get,f,input:i}}
+function check(items){for(const x of items){const v=x.get(),f=x.f;if(f.ro)continue;if(f.req&&(v==null||v===''))return f.l+' is required';if(v!=null&&typeof v==='string'){if(f.max&&v.length>f.max)return f.l+' is too long';if(f.pattern&&!f.pattern.test(v))return f.l+' is not valid'}}return null}
+async function section(key){const c=S[key];if(!c)return dash();app.textContent='';const w=el('div','wrap'),top=el('div','top');top.append(el('h1',null,c.t),btn('← Back',()=>{location.hash='#/'}));w.append(top);app.append(w);
+ const head=el('div','act'),list=el('div','list');w.append(head,list);
+ const{data,error}=await sb.from(c.table).select('*').order(c.order[0],{ascending:c.order[1]});if(error)return toast(error.message);const rows=(data||[]).filter(r=>!(c.table==='site_content'&&String(r.key).startsWith('legal.')));
+ if(!c.noAdd)head.append(btn('+ Add new',()=>edit(key,null),'btn pt'));if(c.head)c.head(head,rows);
+ if(c.markSeen)sb.from('payments').update({seen_at:new Date().toISOString()}).is('seen_at',null).then(()=>{});
+ if(!rows.length)list.append(el('p',null,'Nothing here yet.'));
+ rows.forEach(r=>{const b=el('button','row'),d=el('div'),[a,s]=c.row(r);d.append(el('div',null,a),el('small',null,s));b.append(d,el('span',null,'❯'));b.onclick=()=>edit(key,r);list.append(b)})}
+async function edit(key,row){const c=S[key],pk=c.pk||'id';app.textContent='';const w=el('div','wrap'),top=el('div','top');top.append(el('h1',null,row?'Edit':'Add'),btn('← Back',()=>section(key)));w.append(top);app.append(w);
+ const f=el('form'),items=c.fields.map(x=>{const it=fld(x,row?row[x.k]:(x.type==='bool'?true:null));if(x.lockOnEdit&&row)it.input.disabled=true;f.append(it.node);return it});w.append(f);
+ const kids=(c.kids||[]).map(kd=>{const box=el('div','kids'),rowsEl=el('div'),add=btn('+ Add',()=>addRow(),'btn');let rs=[];box.append(el('h3',null,kd.t),rowsEl,add);f.append(box);
+  const addRow=(v)=>{if(rs.length>=kd.max)return toast('Limit reached');const k=el('div','kid'),its=kd.fields.map(x=>{const it=fld(x,v?v[x.k]:(x.k==='anchor_x'||x.k==='anchor_y'?.5:null));k.append(it.node);return it}),o={its,k};rs.push(o);
+   k.append(btn('Remove',()=>{rs=rs.filter(z=>z!==o);k.remove()}));rowsEl.append(k)};
+  if(row)sb.from(kd.table).select('*').eq('item_id',row.id).order('sort_order').then(({data})=>(data||[]).forEach(addRow));
+  return{kd,get:()=>rs.map(o=>o.its)}});
+ if(c.audio&&row&&row.audio_path){const b=el('div','kids');b.append(el('h3',null,'Voice note'));sb.storage.from('request-audio').createSignedUrl(row.audio_path,300).then(({data})=>{if(!data)return;const a=el('audio');a.controls=true;a.src=data.signedUrl;const dl=el('a',null,'Download');dl.href=data.signedUrl;dl.download='voice-note';dl.style.color='var(--ink2)';b.append(a,dl)});
+  b.append(btn('Delete audio only',async()=>{if(!confirm('Delete this voice note?'))return;await sb.storage.from('request-audio').remove([row.audio_path]);await sb.from('custom_requests').update({audio_path:null,audio_bytes:null}).eq('id',row.id);toast('Audio deleted');edit(key,{...row,audio_path:null})}));f.append(b)}
+ const act=el('div','act');if(!c.ro)act.append(Object.assign(el('button','btn pt','Save'),{type:'submit'}));
+ if(row&&!c.noDel&&!c.ro&&!c.clear)act.append(btn('Delete',async()=>{if(!confirm('Delete permanently?'))return;if(c.audio&&row.audio_path)await sb.storage.from('request-audio').remove([row.audio_path]);const{error}=await sb.from(c.table).delete().eq(pk,row[pk]);if(error)return toast(error.message);toast('Deleted');section(key)}));
+ if(c.clear&&row)act.append(btn('Clear this error',async()=>{const{error}=await sb.from('error_events').delete().eq('fingerprint',row.fingerprint);if(error)return toast(error.message);toast('Cleared');section(key)}));
+ f.append(act);
+ f.onsubmit=async ev=>{ev.preventDefault();if(c.ro)return;const err=check(items);if(err)return toast(err);for(const k of kids){for(const its of k.get()){const e2=check(its);if(e2)return toast(e2)}}
+  const p={};items.forEach(x=>{if(x.f.ro||x.f.type==='money'&&c.table==='quotes')return;p[x.f.k]=x.get()});
+  if(key==='portfolio'&&p.status==='published'&&!(row&&row.published_at))p.published_at=new Date().toISOString();
+  if(key==='portfolio'&&!p.cta_label)p.cta_label='Get your own version';
+  let res=row?await sb.from(c.table).update(p).eq(pk,row[pk]).select().single():await sb.from(c.table).insert(p).select().single();
+  if(res.error)return toast(res.error.message);const id=res.data.id;
+  for(const k of kids){const del=await sb.from(k.kd.table).delete().eq('item_id',id);if(del.error)return toast(del.error.message);const arr=k.get().map((its,i)=>{const o={item_id:id,sort_order:i};its.forEach(x=>o[x.f.k]=x.get());return o});if(arr.length){const ins=await sb.from(k.kd.table).insert(arr);if(ins.error)return toast(ins.error.message)}}
+  toast('Saved. Press Publish on the home screen when you finish editing.');section(key)}}
+/* ===== analytics (anonymous visitor counts; data comes from the track function) ===== */
+async function analytics(){app.textContent='';const w=el('div','wrap'),top=el('div','top');top.append(el('h1',null,'Analytics'),btn('← Back',()=>{location.hash='#/'}));w.append(top);app.append(w);
+ const sel=el('select');[7,30,90,365].forEach(d=>{const o=el('option',null,'Last '+d+' days');o.value=d;if(d===30)o.selected=true;sel.append(o)});const box=el('div','an');w.append(sel,box);
+ const bars=(title,rows,fmt)=>{box.append(el('h2',null,title));if(!rows.length)return box.append(el('small',null,'No data yet.'));const mx=Math.max(...rows.map(r=>r[1]));rows.forEach(r=>{const b=el('div','bar'),f=el('span','f');f.style.width=Math.max(3,Math.round(r[1]/mx*100))+'%';const t=el('div');t.append(f);b.append(el('span',null,fmt?fmt(r[0]):r[0]),t,el('span',null,String(r[1])));box.append(b)})};
+ const load=async()=>{box.textContent='Loading…';const{data,error}=await sb.rpc('analytics_summary',{p_days:Number(sel.value)});if(error){box.textContent='';return toast(error.message)}
+  box.textContent='';const k=el('div','k');[['Visitors (all time)',data.total_visitors],['Active in period',data.active_visitors],['New in period',data.new_visitors],['Returning in period',data.returning_visitors],['Visits in period',data.visits]].forEach(([l,v])=>{const c=el('div','c');c.append(el('b',null,String(v)),el('small',null,l));k.append(c)});box.append(k);
+  box.append(el('small',null,'Counts only visitors who chose Accept all. Each visitor is a random ID with no name, email, IP address or device details.'));
+  bars('How often visitors come back (visits per visitor, all time)',['1','2-3','4-9','10+'].map(b=>[b+' visit'+(b==='1'?'':'s'),(data.frequency||{})[b]||0]));
+  bars('Visits per day',(data.by_day||[]).map(d=>[d.day,d.visits]));
+  const by=e=>(data.top||[]).filter(t=>t.event===e).map(t=>[t.label||'(none)',t.n]);
+  bars('Pages viewed',by('page'));bars('Projects viewed',by('project'));bars('Invoices generated, by package',by('invoice'));bars('Pay button pressed, by package',by('pay_click'));
+  bars('Where visitors came from',(data.referrers||[]).map(r=>[r.label||'direct',r.n]))};
+ sel.onchange=load;load()}
+function route(){const h=location.hash||'#/';h==='#/s/analytics'?analytics():h.startsWith('#/s/')?section(h.slice(4)):dash()}
+addEventListener('hashchange',()=>{if(app.firstChild&&!$('.login'))route()});
+init();
+</script></body></html>

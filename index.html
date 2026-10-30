@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Admins</title>
+<style>
+:root{--ink:#c8a77c}*{box-sizing:border-box}
+body{margin:0;min-height:100dvh;background:#0e0d0b;color:#eadfca;font:17px/1.5 Georgia,serif}
+.wrap{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+h1{color:var(--ink);margin:0 0 4px}p.s{margin:0 0 18px;opacity:.7}
+input{width:100%;background:#14120f;color:inherit;border:1px solid #c8a77c88;border-radius:14px;padding:.7em 1em;font:inherit;margin-bottom:16px}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+a.card{display:block;text-decoration:none;color:inherit;border:1px solid #c8a77c88;border-radius:18px;padding:14px 16px;background:#14120f99;transition:.25s}
+a.card:hover,a.card:focus{border-color:var(--ink);box-shadow:0 0 22px #c8a77c44;outline:none}
+a.card b{display:block;color:var(--ink);font-size:1.1rem}a.card small{opacity:.75}
+</style></head><body><div class="wrap">
+<h1>Admins</h1><p class="s">One place for every admin site. Each opens its own sign-in.</p>
+<input id="q" type="search" placeholder="Search admins..." autocomplete="off">
+<ul id="list">
+<!-- To add an admin: copy one <li> block, change the link, name and note. Upload the admin as a folder next to this file. -->
+<li><a class="card" href="/mm-portfolio/"><b>MM Portfolio</b><small>Projects, prices, quotes, payments, analytics, publish</small></a></li>
+</ul></div>
+<script>
+const q=document.getElementById('q');q.oninput=()=>document.querySelectorAll('#list li').forEach(l=>l.style.display=l.textContent.toLowerCase().includes(q.value.toLowerCase())?'':'none');
+</script></body></html>
