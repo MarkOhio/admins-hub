@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Kitchen Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+<style>
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0a0a0a}
+::-webkit-scrollbar-thumb{background:#333;border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:#f5a623}
+*{scrollbar-width:thin;scrollbar-color:#333 #0a0a0a}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow-x:hidden}
+body{font-family:'Outfit',sans-serif;background:#0a0a0a;color:#f0ece4;font-size:14px;-webkit-font-smoothing:antialiased}
+button{cursor:pointer;font-family:'Outfit',sans-serif;border:none;background:none}
+img{display:block;max-width:100%}
+:root{
+  --gold:#f5a623;--gold2:#d4880a;
+  --card:#131313;--card2:#1a1a1a;
+  --border:rgba(255,255,255,0.08);
+  --text:#f0ece4;--muted:#666;
+  --green:#22c55e;--red:#ef4444;
+  --r:10px;--r2:14px;
+}
+
+.nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.97);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 16px;gap:12px}
+.nav-brand{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--gold);letter-spacing:0.06em;flex:1}
+.nav-link{color:var(--muted);font-size:0.8rem;font-weight:500;padding:6px 12px;border-radius:6px;transition:color .15s,background .15s;display:inline-flex;align-items:center;gap:5px}
+.nav-link:hover{color:#fff}
+a.nav-link{color:var(--muted);text-decoration:none}
+a.nav-link:hover{color:#fff}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);padding:0 16px;background:#0a0a0a;position:sticky;top:52px;z-index:90}
+.tab{padding:12px 18px;font-size:0.85rem;font-weight:700;color:var(--muted);letter-spacing:0.04em;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;display:flex;align-items:center;gap:7px}
+.tab:hover{color:#fff}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+
+.pane{display:none;padding:20px 16px 80px;max-width:900px;margin:0 auto}
+.pane.on{display:block;animation:fu .3s ease}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.sec{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:22px;margin-bottom:20px}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.04em;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.sec-sub{font-size:0.78rem;color:var(--muted);margin-bottom:18px}
+
+.flbl{display:block;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.flbl .req{color:var(--gold)}
+.finp{width:100%;background:#0f0f0f;border:1.5px solid var(--border);border-radius:var(--r);padding:10px 13px;color:var(--text);font-family:'Outfit',sans-serif;font-size:0.88rem;outline:none;transition:border-color .15s,box-shadow .15s}
+.finp:focus{border-color:rgba(245,166,35,0.45);box-shadow:0 0 0 3px rgba(245,166,35,0.08)}
+textarea.finp{resize:vertical;min-height:76px;line-height:1.5}
+.fg{margin-bottom:16px}
+.t2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:500px){.t2{grid-template-columns:1fr}}
+.t3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:600px){.t3{grid-template-columns:1fr 1fr}}
+@media(max-width:380px){.t3{grid-template-columns:1fr}}
+.fhint{font-size:0.7rem;color:var(--muted);margin-top:3px}
+
+/* ── SIZE TIERS ── */
+.tier-block{
+  background:#0d0d0d;border:1px solid var(--border);
+  border-radius:var(--r);padding:14px;margin-bottom:10px;
+}
+.tier-label{font-size:0.75rem;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:0.06em;text-transform:uppercase}
+.tier-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:400px){.tier-row{grid-template-columns:1fr}}
+.tier-hint{font-size:0.7rem;color:var(--muted);margin-top:6px}
+
+/* Upload zone */
+.uzone{border:2px dashed rgba(255,255,255,0.1);border-radius:var(--r2);padding:30px 16px;text-align:center;cursor:pointer;position:relative;background:#0e0e0e;transition:border-color .2s,background .2s}
+.uzone:hover,.uzone.drag{border-color:var(--gold);background:rgba(245,166,35,0.03)}
+.uzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uzone-ico{font-size:2.4rem;margin-bottom:8px;pointer-events:none}
+.uzone-ttl{font-weight:700;font-size:0.92rem;pointer-events:none}
+.uzone-sub{font-size:0.75rem;color:var(--muted);margin-top:3px;pointer-events:none}
+.prev-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.prev-item{position:relative;width:82px;height:82px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--border)}
+.prev-item img{width:100%;height:100%;object-fit:cover}
+.prev-rm{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.7);color:#fff;font-size:0.72rem;display:flex;align-items:center;justify-content:center}
+.prev-item.new-img::after{content:'NEW';position:absolute;bottom:3px;left:3px;background:var(--gold);color:#000;font-size:0.55rem;font-weight:800;padding:1px 5px;border-radius:3px}
+.prog-wrap{margin-top:10px;display:none}
+.prog-wrap.on{display:block}
+.prog-track{height:5px;background:var(--border);border-radius:5px;overflow:hidden}
+.prog-fill{height:100%;background:var(--gold);width:0;transition:width .28s;border-radius:5px}
+.prog-lbl{font-size:0.72rem;color:var(--muted);margin-top:4px}
+
+/* Tags */
+.tag-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tag-chip{padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:#0f0f0f;font-size:0.75rem;font-weight:600;color:var(--muted);transition:border-color .15s,background .15s,color .15s;display:flex;align-items:center;gap:4px}
+.tag-chip.on{border-color:var(--gold);background:rgba(245,166,35,0.1);color:var(--gold)}
+.tag-x{font-size:0.7rem;opacity:0.7}
+.tag-add-row{display:flex;gap:7px;margin-top:8px}
+.tag-inp{flex:1;background:#0f0f0f;border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:'Outfit',sans-serif;font-size:0.82rem;outline:none}
+.tag-inp:focus{border-color:rgba(245,166,35,0.4)}
+.tag-add-btn{background:var(--gold);color:#000;border-radius:8px;padding:7px 14px;font-weight:800;font-size:0.8rem}
+
+/* Hot toggle */
+.hot-row{display:flex;align-items:center;justify-content:space-between;background:#0f0f0f;border:1.5px solid var(--border);border-radius:var(--r);padding:13px 15px}
+.hot-info h4{font-weight:700;font-size:0.88rem;margin-bottom:2px}
+.hot-info p{font-size:0.72rem;color:var(--muted)}
+.bigtgl{position:relative;width:46px;height:26px}
+.bigtgl input{opacity:0;width:0;height:0}
+.btrack{position:absolute;inset:0;background:#2a2a2a;border-radius:26px;cursor:pointer;transition:background .18s}
+.btrack::after{content:'';position:absolute;top:4px;left:4px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .18s;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.bigtgl input:checked+.btrack{background:var(--gold)}
+.bigtgl input:checked+.btrack::after{transform:translateX(20px)}
+
+/* Buttons */
+.btn-g{background:var(--gold);color:#000;border-radius:9px;padding:11px 20px;font-weight:800;font-size:0.88rem;transition:background .15s,transform .12s}
+.btn-g:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-g:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.btn-r{background:#ef4444;color:#fff;border-radius:9px;padding:11px 20px;font-weight:700;font-size:0.85rem;transition:opacity .15s}
+.btn-r:hover{opacity:0.85}
+.btn-r:disabled{opacity:0.35;cursor:not-allowed}
+.btn-gh{border:1.5px solid var(--border);color:var(--muted);border-radius:9px;padding:10px 20px;font-weight:600;font-size:0.85rem;transition:border-color .15s,color .15s}
+.btn-gh:hover{border-color:rgba(255,255,255,0.2);color:#fff}
+.act-row{display:flex;gap:8px;flex-wrap:wrap}
+.act-row>*{flex:1;min-width:100px}
+
+.smsg{padding:9px 13px;border-radius:9px;font-size:0.82rem;font-weight:600;margin-top:10px;display:none}
+.smsg.on{display:block}
+.smsg.ok{background:rgba(34,197,94,0.12);color:var(--green)}
+.smsg.err{background:rgba(239,68,68,0.1);color:var(--red)}
+
+/* Products list */
+.pl-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.pl-ttl{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.04em}
+.pgrid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:11px}
+.pcard{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s;position:relative}
+.pcard:hover{border-color:rgba(245,166,35,0.35);transform:translateY(-2px)}
+.pcard.sel{border-color:var(--gold);box-shadow:0 0 0 2px rgba(245,166,35,0.25)}
+.pcard-chk{position:absolute;top:7px;left:7px;z-index:2;width:18px;height:18px;accent-color:var(--gold)}
+.pcard img{width:100%;height:120px;object-fit:cover}
+.pcard-body{padding:9px 10px}
+.pcard-name{font-weight:700;font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.pcard-price{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--gold)}
+.pcard-hot{position:absolute;top:7px;right:7px;background:var(--gold);color:#000;font-size:0.58rem;font-weight:800;padding:2px 6px;border-radius:20px}
+.no-prods{text-align:center;padding:40px;color:var(--muted);grid-column:1/-1}
+.no-prods-ico{font-size:3rem;margin-bottom:8px;opacity:0.2}
+
+/* Analytics */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--r2);padding:20px 16px}
+.stat-label{font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:var(--gold);line-height:1}
+.stat-sub{font-size:0.72rem;color:var(--muted);margin-top:4px}
+.log-table{width:100%;border-collapse:collapse}
+.log-table th{text-align:left;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border)}
+.log-table td{padding:9px 10px;font-size:0.8rem;border-bottom:1px solid rgba(255,255,255,0.04)}
+.log-table tr:last-child td{border-bottom:none}
+.ev-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:700}
+.ev-badge.visit{background:rgba(255,255,255,0.06);color:var(--muted)}
+.ev-badge.wa{background:rgba(37,211,102,0.12);color:#25d366}
+.ev-badge.ig{background:rgba(225,48,108,0.12);color:#e1306c}
+.ref-btn{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;color:var(--muted);font-size:0.78rem;font-weight:600;transition:color .15s,border-color .15s}
+.ref-btn:hover{color:#fff;border-color:rgba(255,255,255,0.2)}
+
+/* Loader */
+.loader{position:fixed;inset:0;background:rgba(10,10,10,0.85);backdrop-filter:blur(4px);z-index:999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.loader.on{display:flex}
+.spin{width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--gold);border-radius:50%;animation:sp .75s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loader-txt{color:#fff;font-weight:600;font-size:0.9rem}
+
+.hidden{display:none!important}
+</style>
+<style>.showcase-notice{position:sticky;top:0;z-index:9997;padding:7px 12px;text-align:center;background:#252018;color:#f4c36b;border-bottom:1px solid rgba(245,166,35,.25);font:500 11px/1.4 system-ui,sans-serif;letter-spacing:.02em}.showcase-notice strong{font-weight:700}@media(max-width:480px){.showcase-notice{font-size:10px;padding:6px 8px}}</style>
+</head>
+<body>
+<div class="showcase-notice"><strong>SHOWCASE DEMO</strong> · Sample data only — not connected to the live admin. Live administration requires login.</div>
+
+<div class="nav">
+  <div class="nav-brand">⚡ KITCHEN ADMIN</div>
+  <a class="nav-link" href="https://omonuwaskitchen.page.gd/">← Back to Shop</a>
+</div>
+
+<div class="tabs">
+  <button class="tab on" id="tProducts" onclick="switchTab('products')">🍽 Products</button>
+  <button class="tab" id="tAnalytics" onclick="switchTab('analytics')">📊 Analytics</button>
+</div>
+
+<div class="loader" id="loader">
+  <div class="spin"></div>
+  <div class="loader-txt" id="loaderTxt">Saving…</div>
+</div>
+
+<!-- ════ PRODUCTS TAB ════ -->
+<div id="pProducts" class="pane on">
+
+  <div class="sec">
+    <div class="sec-title"><span id="formIcon">➕</span> <span id="formTitle">Add New Meal</span></div>
+    <div class="sec-sub" id="formSub">Fill in the details to add a meal to your menu.</div>
+    <input type="hidden" id="prodId"/>
+
+    <!-- Images -->
+    <div class="fg">
+      <label class="flbl">📸 Meal Photos <span class="req">*</span></label>
+      <div class="uzone" id="uzone">
+        <input type="file" id="imgFiles" accept="image/*" multiple/>
+        <div class="uzone-ico">🖼</div>
+        <div class="uzone-ttl">Tap here to add photos</div>
+        <div class="uzone-sub">or drag & drop · JPG PNG WEBP</div>
+      </div>
+      <div class="prev-row" id="prevRow"></div>
+      <div class="prog-wrap" id="progWrap">
+        <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+        <div class="prog-lbl" id="progLbl">Uploading…</div>
+      </div>
+    </div>
+
+    <!-- Name -->
+    <div class="fg">
+      <label class="flbl" for="tInp">🍽 Meal Name <span class="req">*</span></label>
+      <input class="finp" id="tInp" type="text" placeholder="e.g. Jollof Rice & Chicken"/>
+    </div>
+
+    <!-- SIZE TIERS -->
+    <div class="fg">
+      <label class="flbl">📏 Sizes & Prices</label>
+      <p class="fhint" style="margin-bottom:10px">Set up to 3 sizes (e.g. 3L, 5L, 7L) with their prices. Leave blank to skip a tier.</p>
+
+      <div class="tier-block">
+        <div class="tier-label">Tier 1 — Smallest (required)</div>
+        <div class="tier-row">
+          <div>
+            <label class="flbl">Size Label <span class="req">*</span></label>
+            <input class="finp" id="size1" type="text" placeholder="e.g. 3 Litres"/>
+          </div>
+          <div>
+            <label class="flbl">Price (₦) <span class="req">*</span></label>
+            <input class="finp" id="price1" type="number" placeholder="e.g. 3500" min="0"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="tier-block">
+        <div class="tier-label">Tier 2 — Medium (optional)</div>
+        <div class="tier-row">
+          <div>
+            <label class="flbl">Size Label</label>
+            <input class="finp" id="size2" type="text" placeholder="e.g. 5 Litres"/>
+          </div>
+          <div>
+            <label class="flbl">Price (₦)</label>
+            <input class="finp" id="price2" type="number" placeholder="e.g. 5500" min="0"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="tier-block">
+        <div class="tier-label">Tier 3 — Large (optional)</div>
+        <div class="tier-row">
+          <div>
+            <label class="flbl">Size Label</label>
+            <input class="finp" id="size3" type="text" placeholder="e.g. 7 Litres"/>
+          </div>
+          <div>
+            <label class="flbl">Price (₦)</label>
+            <input class="finp" id="price3" type="number" placeholder="e.g. 8000" min="0"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discount -->
+    <div class="fg">
+      <label class="flbl" for="dInp">🏷 Discount Amount (₦)</label>
+      <input class="finp" id="dInp" type="number" placeholder="e.g. 500 — will be deducted from ALL tier prices" min="0"/>
+      <p class="fhint">This amount is subtracted from every tier price. Leave empty for no discount.</p>
+    </div>
+
+    <!-- Description -->
+    <div class="fg">
+      <label class="flbl" for="descInp">📝 Description</label>
+      <textarea class="finp" id="descInp" rows="3" placeholder="Describe the meal — taste, ingredients, serving size…"></textarea>
+    </div>
+
+    <!-- Phone + Message -->
+    <div class="t2">
+      <div class="fg">
+        <label class="flbl" for="phInp">📞 WhatsApp Number</label>
+        <input class="finp" id="phInp" type="tel" placeholder="e.g. 2348012345678"/>
+        <p class="fhint">Orders go to this number.</p>
+      </div>
+      <div class="fg">
+        <label class="flbl" for="mtInp">💬 Order Message Template</label>
+        <input class="finp" id="mtInp" type="text" placeholder="Hi, I want {{title}} ({{size}}) for ₦{{price}}"/>
+        <p class="fhint">Use {{title}} {{size}} {{price}} {{qty}}</p>
+      </div>
+    </div>
+
+    <!-- Tags -->
+    <div class="fg">
+      <label class="flbl">🏷 Category Tags</label>
+      <div class="tag-wrap" id="tagWrap"></div>
+      <div class="tag-add-row">
+        <input class="tag-inp" id="tagInp" type="text" placeholder="e.g. Breakfast, Lunch, Snacks"/>
+        <button class="tag-add-btn" onclick="addTag()">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Hot toggle -->
+    <div class="fg">
+      <div class="hot-row">
+        <div class="hot-info">
+          <h4>🔥 Feature on Homepage</h4>
+          <p>Shows this meal in the "Hottest Dishes" carousel.</p>
+        </div>
+        <label class="bigtgl">
+          <input type="checkbox" id="hotChk"/>
+          <span class="btrack"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Stock -->
+    <div class="fg">
+      <label class="flbl" for="sInp">📦 Stock Qty (0 = unlimited)</label>
+      <input class="finp" id="sInp" type="number" placeholder="0" min="0"/>
+    </div>
+
+    <!-- Actions -->
+    <div class="act-row">
+      <button class="btn-g" onclick="saveProd()">💾 Save Meal</button>
+      <button class="btn-r hidden" id="delBtn" onclick="deleteProd()">🗑 Delete</button>
+      <button class="btn-gh" onclick="clearForm()">✖ Clear</button>
+    </div>
+    <div class="smsg" id="formMsg"></div>
+  </div>
+
+  <!-- Products list -->
+  <div class="sec">
+    <div class="pl-head">
+      <div class="pl-ttl">📋 Menu Items</div>
+      <button class="btn-r" id="bulkBtn" disabled style="padding:8px 14px;font-size:0.78rem;flex:none" onclick="bulkDel()">🗑 Delete Selected</button>
+    </div>
+    <p style="font-size:0.75rem;color:var(--muted);margin-bottom:14px">Tap a meal to edit. Tick the box to select for bulk delete.</p>
+    <div class="pgrid2" id="prodGrid">
+      <div class="no-prods"><div class="no-prods-ico">🍽</div><div>Loading meals…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ANALYTICS TAB ════ -->
+<div id="pAnalytics" class="pane">
+  <div class="sec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div class="sec-title" style="margin-bottom:0">📊 Site Analytics</div>
+      <button class="ref-btn" onclick="loadAnalytics()">↻ Refresh</button>
+    </div>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:20px">Tracks page visits and checkout events from the storefront.</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Total Visits</div><div class="stat-val" id="sVisit">—</div><div class="stat-sub">unique sessions</div></div>
+      <div class="stat-card"><div class="stat-label">WhatsApp Orders</div><div class="stat-val" id="sWA">—</div><div class="stat-sub">checkout clicks</div></div>
+      <div class="stat-card"><div class="stat-label">Instagram Orders</div><div class="stat-val" id="sIG">—</div><div class="stat-sub">checkout clicks</div></div>
+      <div class="stat-card"><div class="stat-label">Conversion Rate</div><div class="stat-val" id="sCVR">—</div><div class="stat-sub">orders / visits</div></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-title" style="margin-bottom:14px">🕐 Recent Events</div>
+    <div style="overflow-x:auto">
+      <table class="log-table">
+        <thead><tr><th>Event</th><th>Date</th><th>Time</th></tr></thead>
+        <tbody id="logBody"><tr><td colspan="3" style="color:var(--muted);padding:20px;text-align:center">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* Local showcase database: all changes stay in this browser (localStorage). */
+(function(){
+  const IS_DEMAKU=/demaku-admin-demo/i.test(location.pathname);
+  const KEY=IS_DEMAKU?'showcase_admin_db_v1_demaku':'showcase_admin_db_v1_food';
+  const foodImages=[
+    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=900&q=85',
+    'https://images.unsplash.com/photo-1547592180-85f173990554?w=900&q=85',
+    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=900&q=85',
+    'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=900&q=85',
+    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=900&q=85'
+  ];
+  const fashionImages=[
+    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&q=85',
+    'https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=900&q=85',
+    'https://images.unsplash.com/photo-1527719327859-c6ce80353573?w=900&q=85',
+    'https://images.unsplash.com/photo-155-shirt?auto=format&w=900&q=85',
+    'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=900&q=85'
+  ];
+  const seed={
+    products:[
+      {id:'meal-001',title:'Jollof Rice & Chicken',size_tier1:'Regular',price_tier1:3500,size_tier2:'Large',price_tier2:5000,size_tier3:'Family Pack',price_tier3:8500,price:3500,discount_price:3000,description:'Smoky party-style jollof rice served with grilled chicken.',stock:24,order_phone:'09066231600',order_message_template:'Hello, I would like to order this meal.',hot_product:true,tags:['Lunch','Dinner'],images:[foodImages[0],foodImages[1]],created_at:'2026-10-20T10:00:00Z'},
+      {id:'meal-002',title:'Grilled Chicken Salad',size_tier1:'Regular Bowl',price_tier1:4200,size_tier2:'Large Bowl',price_tier2:6000,size_tier3:null,price:4200,discount_price:null,description:'Fresh greens, grilled chicken and house dressing.',stock:16,order_phone:'09066231600',order_message_template:'Hello, I would like to order this meal.',hot_product:false,tags:['Lunch','Healthy'],images:[foodImages[1]],created_at:'2026-10-19T10:00:00Z'},
+      {id:'meal-003',title:'Classic Beef Burger',size_tier1:'Single',price_tier1:4500,size_tier2:'Double',price_tier2:6500,size_tier3:null,price:4500,discount_price:null,description:'Juicy beef patty with fresh vegetables and house sauce.',stock:12,order_phone:'09066231600',order_message_template:'Hello, I would like to order this meal.',hot_product:true,tags:['Snacks'],images:[foodImages[3]],created_at:'2026-10-18T10:00:00Z'}
+    ],
+    analytics:[{id:'a1',event:'visit',created_at:'2026-11-01T10:00:00Z'},{id:'a2',event:'visit',created_at:'2026-11-01T11:00:00Z'},{id:'a3',event:'checkout_whatsapp',created_at:'2026-11-01T12:00:00Z'},{id:'a4',event:'checkout_instagram',created_at:'2026-11-02T12:00:00Z'}],
+    price_templates:[{id:'t1',name:'Premium',tier:'premium',price:25000,description:'Premium quality'},{id:'t2',name:'Best Seller',tier:'best',price:18000,description:'Most popular choice'},{id:'t3',name:'Affordable',tier:'affordable',price:12000,description:'Everyday value'}],
+    series_sales:[{id:'s1',series_name:'Classic Tee',sales:34},{id:'s2',series_name:'Streetwear Drop',sales:21}],
+    product_variants:[],product_prices:[],product_bonus_items:[],visitor_log:[{id:'v1'},{id:'v2'},{id:'v3'},{id:'v4'}]
+  };
+  if(IS_DEMAKU){
+    seed.products=[
+      {id:'tee-001',product_code:'DMK-001',name:'Everyday Essential Tee',tagline:'Core Collection',background_image_url:fashionImages[0],default_tier:'best',published:true,created_at:'2026-10-25T10:00:00Z'},
+      {id:'tee-002',product_code:'DMK-002',name:'Oversized Street Tee',tagline:'Streetwear Drop',background_image_url:fashionImages[1],default_tier:'premium',published:true,created_at:'2026-10-22T10:00:00Z'},
+      {id:'tee-003',product_code:'DMK-003',name:'Minimal Logo Tee',tagline:'Core Collection',background_image_url:fashionImages[4],default_tier:'affordable',published:false,created_at:'2026-10-18T10:00:00Z'}
+    ];
+    seed.product_variants=[
+      {id:'var-1',product_id:'tee-001',color_hex:'#1a1a1a',front_image_url:fashionImages[0],back_image_url:fashionImages[2],card3_image_url:fashionImages[4],sort_order:0},
+      {id:'var-2',product_id:'tee-001',color_hex:'#e8e2d8',front_image_url:fashionImages[1],back_image_url:fashionImages[3],card3_image_url:fashionImages[4],sort_order:1}
+    ];
+    seed.product_prices=[
+      {id:'price-1',product_id:'tee-001',tier:'best',label:'Classic Cotton Tee',amount:18000,sort_order:0},
+      {id:'price-2',product_id:'tee-001',tier:'premium',label:'Heavyweight Premium Tee',amount:25000,sort_order:0},
+      {id:'price-3',product_id:'tee-001',tier:'affordable',label:'Basic Tee',amount:12000,sort_order:0}
+    ];
+    seed.series_sales=[{id:'s1',series_name:'Core Collection',units_sold:34},{id:'s2',series_name:'Streetwear Drop',units_sold:21}];
+    seed.price_templates=[{id:'t1',tier:'premium',label:'Heavyweight Premium Tee',amount:25000,sort_order:0},{id:'t2',tier:'best',label:'Classic Cotton Tee',amount:18000,sort_order:0},{id:'t3',tier:'affordable',label:'Basic Tee',amount:12000,sort_order:0}];
+  }
+  function read(){try{return JSON.parse(localStorage.getItem(KEY))||JSON.parse(JSON.stringify(seed))}catch(e){return JSON.parse(JSON.stringify(seed))}}
+  let db=read();
+  function persist(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
+  function uid(){return 'demo-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)}
+  class Query{
+    constructor(table){this.table=table;this.action='select';this.filters=[];this.payload=null;this.sort=null;this.max=null;this.returning=false;this.one=false;this.opts={};}
+    select(cols='*',opts={}){this.returning=true;this.opts=opts;return this}
+    insert(rows){this.action='insert';this.payload=Array.isArray(rows)?rows:[rows];return this}
+    update(row){this.action='update';this.payload=row;return this}
+    delete(){this.action='delete';return this}
+    upsert(rows){this.action='upsert';this.payload=Array.isArray(rows)?rows:[rows];return this}
+    eq(k,v){this.filters.push(r=>r[k]===v);return this}
+    neq(k,v){this.filters.push(r=>r[k]!==v);return this}
+    in(k,vs){this.filters.push(r=>vs.includes(r[k]));return this}
+    order(k,o={}){this.sort=[k,o.ascending!==false];return this}
+    limit(n){this.max=n;return this}
+    single(){this.one=true;return this}
+    then(resolve,reject){return Promise.resolve().then(()=>this.run()).then(resolve,reject)}
+    run(){if(!db[this.table])db[this.table]=[];let rows=db[this.table],matched=rows.filter(r=>this.filters.every(f=>f(r))),data=null;
+      if(this.action==='insert'){data=this.payload.map(x=>({...x,id:x.id||uid(),created_at:x.created_at||new Date().toISOString()}));rows.push(...data);persist();}
+      else if(this.action==='upsert'){data=this.payload.map(x=>{let i=rows.findIndex(r=>r.id&&r.id===x.id);if(i<0){let z={...x,id:x.id||uid()};rows.push(z);return z}rows[i]={...rows[i],...x};return rows[i]});persist();}
+      else if(this.action==='update'){matched.forEach(r=>Object.assign(r,this.payload));data=matched;persist();}
+      else if(this.action==='delete'){data=matched.slice();db[this.table]=rows.filter(r=>!matched.includes(r));persist();}
+      else {data=matched.slice();if(this.sort){const [k,asc]=this.sort;data.sort((a,b)=>{let x=a[k]||'',y=b[k]||'';return (x>y?1:x<y?-1:0)*(asc?1:-1)})}if(this.max!==null)data=data.slice(0,this.max);}
+      if(this.one)data=data&&data[0]||null;
+      const count=this.opts.count==='exact'?matched.length:undefined;
+      return {data,error:null,count};
+    }
+  }
+  const client={from:t=>new Query(t),storage:{from:bucket=>({upload:async(path,file)=>{let url='';try{url=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}catch(e){return {data:null,error:{message:'Could not read image in this browser'}}}window.__demoUploads=window.__demoUploads||{};window.__demoUploads[bucket+'/'+path]=url;return {data:{path},error:null}},getPublicUrl:path=>({data:{publicUrl:(window.__demoUploads||{})[bucket+'/'+path]||path}}),remove:async paths=>({data:paths,error:null})})}};
+  window.supabase={createClient:()=>client};
+  window.__demoReset=()=>{db=JSON.parse(JSON.stringify(seed));persist();location.reload()};
+  persist();
+  window.Swal=window.Swal||{fire:async opts=>({isConfirmed:opts&&opts.showCancelButton?confirm(opts.title||'Are you sure?'): (alert(opts.title||''),true)})};
+})();
+
+</script>
+<script>
+const SB_URL   = 'LOCAL_SHOWCASE_DEMO';
+const SB_ANON  = 'LOCAL_ONLY';
+const BUCKET   = 'product-images';
+const DEF_PHONE= '09066231600';
+const NOIMG    = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23131313' width='400' height='300'/%3E%3Ctext fill='%23333' font-size='52' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E%F0%9F%8D%BD%3C/text%3E%3C/svg%3E";
+
+const sb = window.supabase.createClient(SB_URL, SB_ANON);
+
+let allTags=new Set(['Breakfast','Lunch','Dinner','Snacks','Drinks']);
+let selTags=new Set();
+let pending=[],existing=[],selProds=new Set(),editId=null;
+
+/* ── TABS ── */
+function switchTab(t){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p'+cap(t)).classList.add('on');
+  document.getElementById('t'+cap(t)).classList.add('on');
+  if(t==='analytics')loadAnalytics();
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+
+/* ── LOADER ── */
+function showLoader(txt){document.getElementById('loaderTxt').textContent=txt||'Loading…';document.getElementById('loader').classList.add('on')}
+function hideLoader(){document.getElementById('loader').classList.remove('on')}
+
+/* ── UPLOAD ZONE ── */
+const uzone=document.getElementById('uzone');
+const imgFiles=document.getElementById('imgFiles');
+const prevRow=document.getElementById('prevRow');
+
+uzone.addEventListener('dragover',e=>{e.preventDefault();uzone.classList.add('drag')});
+uzone.addEventListener('dragleave',()=>uzone.classList.remove('drag'));
+uzone.addEventListener('drop',e=>{
+  e.preventDefault();uzone.classList.remove('drag');
+  addFiles([...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')));
+});
+imgFiles.addEventListener('change',()=>{addFiles([...imgFiles.files]);imgFiles.value=''});
+
+function addFiles(files){
+  files.forEach(f=>pending.push({file:f,localUrl:URL.createObjectURL(f)}));
+  renderPreviews();
+}
+function renderPreviews(){
+  prevRow.innerHTML='';
+  existing.forEach((url,i)=>{
+    const div=document.createElement('div');div.className='prev-item';
+    div.innerHTML=`<img src="${url}"/><button class="prev-rm" onclick="rmExisting(${i})">✕</button>`;
+    prevRow.appendChild(div);
+  });
+  pending.forEach((pf,i)=>{
+    const div=document.createElement('div');div.className='prev-item new-img';
+    div.innerHTML=`<img src="${pf.localUrl}"/><button class="prev-rm" onclick="rmPending(${i})">✕</button>`;
+    prevRow.appendChild(div);
+  });
+}
+function rmExisting(i){existing.splice(i,1);renderPreviews()}
+function rmPending(i){URL.revokeObjectURL(pending[i].localUrl);pending.splice(i,1);renderPreviews()}
+
+async function uploadImages(){
+  if(!pending.length)return existing;
+  const pw=document.getElementById('progWrap'),pf=document.getElementById('progFill'),pl=document.getElementById('progLbl');
+  pw.classList.add('on');
+  const urls=[...existing];
+  for(let i=0;i<pending.length;i++){
+    const{file}=pending[i];
+    const ext=file.name.split('.').pop();
+    const path=`${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    pl.textContent=`Uploading image ${i+1} of ${pending.length}…`;
+    pf.style.width=`${Math.round(i/pending.length*100)}%`;
+    const{error}=await sb.storage.from(BUCKET).upload(path,file,{cacheControl:'3600',upsert:false});
+    if(error)throw new Error('Upload failed: '+error.message);
+    const{data:u}=sb.storage.from(BUCKET).getPublicUrl(path);
+    urls.push(u.publicUrl);
+    pf.style.width=`${Math.round((i+1)/pending.length*100)}%`;
+  }
+  pl.textContent='✅ Done!';
+  setTimeout(()=>pw.classList.remove('on'),1400);
+  return urls;
+}
+
+/* ── TAGS ── */
+function renderTags(){
+  const w=document.getElementById('tagWrap');w.innerHTML='';
+  allTags.forEach(tag=>{
+    const b=document.createElement('button');b.type='button';
+    b.className='tag-chip'+(selTags.has(tag)?' on':'');
+    b.innerHTML=`${tag}<span class="tag-x">✕</span>`;
+    b.addEventListener('click',e=>{
+      if(e.target.classList.contains('tag-x')){allTags.delete(tag);selTags.delete(tag);renderTags();return}
+      selTags.has(tag)?selTags.delete(tag):selTags.add(tag);
+      b.classList.toggle('on',selTags.has(tag));
+    });
+    w.appendChild(b);
+  });
+}
+function addTag(){
+  const v=document.getElementById('tagInp').value.trim();if(!v)return;
+  allTags.add(v);selTags.add(v);
+  document.getElementById('tagInp').value='';renderTags();
+}
+document.getElementById('tagInp').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addTag()}});
+
+/* ── SAVE ── */
+async function saveProd(){
+  const title=document.getElementById('tInp').value.trim();
+  const size1=document.getElementById('size1').value.trim();
+  const price1=parseFloat(document.getElementById('price1').value);
+  if(!title){showMsg('❌ Please enter a meal name.','err');return}
+  if(!size1||!price1){showMsg('❌ Tier 1 size and price are required.','err');return}
+
+  showLoader('Saving meal…');
+  try{
+    const imgs=await uploadImages();
+    const payload={
+      title,
+      // Tier 1 (required)
+      size_tier1: size1,
+      price_tier1: price1,
+      // Tier 2
+      size_tier2: document.getElementById('size2').value.trim()||null,
+      price_tier2: parseFloat(document.getElementById('price2').value)||null,
+      // Tier 3
+      size_tier3: document.getElementById('size3').value.trim()||null,
+      price_tier3: parseFloat(document.getElementById('price3').value)||null,
+      // Legacy price = tier1 price (for hero display)
+      price: price1,
+      discount_price: parseFloat(document.getElementById('dInp').value)||null,
+      description: document.getElementById('descInp').value.trim(),
+      stock: parseInt(document.getElementById('sInp').value)||0,
+      order_phone: document.getElementById('phInp').value.trim()||DEF_PHONE,
+      order_message_template: document.getElementById('mtInp').value.trim(),
+      hot_product: document.getElementById('hotChk').checked,
+      tags: [...selTags],
+      images: imgs,
+    };
+    let err;
+    if(editId){({error:err}=await sb.from('products').update(payload).eq('id',editId))}
+    else{({error:err}=await sb.from('products').insert([payload]))}
+    if(err)throw err;
+    showMsg(editId?'✅ Meal updated!':'✅ New meal added!','ok');
+    clearForm();loadProds();
+  }catch(e){showMsg('❌ '+e.message,'err')}
+  finally{hideLoader()}
+}
+
+/* ── DELETE ── */
+async function deleteProd(){
+  if(!editId)return;
+  const r=await Swal.fire({title:'Delete this meal?',text:'Cannot be undone.',icon:'warning',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Delete',background:'#141414',color:'#f0ece4'});
+  if(!r.isConfirmed)return;
+  showLoader('Deleting…');
+  const{error}=await sb.from('products').delete().eq('id',editId);
+  hideLoader();
+  if(error){showMsg('❌ '+error.message,'err');return}
+  showMsg('🗑 Deleted.','ok');clearForm();loadProds();
+}
+async function bulkDel(){
+  if(!selProds.size)return;
+  const r=await Swal.fire({title:`Delete ${selProds.size} meal${selProds.size>1?'s':''}?`,icon:'warning',showCancelButton:true,confirmButtonColor:'#ef4444',confirmButtonText:'Delete all',background:'#141414',color:'#f0ece4'});
+  if(!r.isConfirmed)return;
+  showLoader('Deleting…');
+  const{error}=await sb.from('products').delete().in('id',[...selProds]);
+  hideLoader();
+  if(error){showMsg('❌ '+error.message,'err');return}
+  selProds.clear();updBulk();loadProds();
+}
+
+/* ── LOAD ── */
+async function loadProds(){
+  const{data,error}=await sb.from('products').select('*').order('created_at',{ascending:false});
+  if(error){console.error(error);return}
+  renderGrid(data||[]);
+}
+function renderGrid(prods){
+  const g=document.getElementById('prodGrid');g.innerHTML='';
+  if(!prods.length){g.innerHTML=`<div class="no-prods"><div class="no-prods-ico">🍽</div><div>No meals yet — add your first one above!</div></div>`;return}
+  prods.forEach(p=>{
+    const c=document.createElement('div');c.className='pcard'+(selProds.has(p.id)?' sel':'');
+    const img=(p.images&&p.images[0])||NOIMG;
+    const dispPrice=p.price_tier1||p.price||0;
+    c.innerHTML=`<input type="checkbox" class="pcard-chk" ${selProds.has(p.id)?'checked':''}/>
+    ${p.hot_product?`<div class="pcard-hot">🔥 HOT</div>`:''}
+    <img src="${img}" loading="lazy" onerror="this.src='${NOIMG}'"/>
+    <div class="pcard-body"><div class="pcard-name">${p.title}</div><div class="pcard-price">from ₦${Number(dispPrice).toLocaleString()}</div></div>`;
+    const chk=c.querySelector('.pcard-chk');
+    chk.addEventListener('change',e=>{e.stopPropagation();selProds[e.target.checked?'add':'delete'](p.id);c.classList.toggle('sel',e.target.checked);updBulk()});
+    c.addEventListener('click',e=>{if(e.target===chk)return;fillForm(p)});
+    g.appendChild(c);
+  });
+}
+function updBulk(){
+  const b=document.getElementById('bulkBtn');
+  b.disabled=!selProds.size;
+  b.textContent=selProds.size?`🗑 Delete ${selProds.size} Selected`:'🗑 Delete Selected';
+}
+
+/* ── FILL FORM ── */
+function fillForm(p){
+  editId=p.id;
+  document.getElementById('prodId').value=p.id;
+  document.getElementById('tInp').value=p.title||'';
+  document.getElementById('size1').value=p.size_tier1||'';
+  document.getElementById('price1').value=p.price_tier1||'';
+  document.getElementById('size2').value=p.size_tier2||'';
+  document.getElementById('price2').value=p.price_tier2||'';
+  document.getElementById('size3').value=p.size_tier3||'';
+  document.getElementById('price3').value=p.price_tier3||'';
+  document.getElementById('dInp').value=p.discount_price||'';
+  document.getElementById('descInp').value=p.description||'';
+  document.getElementById('sInp').value=p.stock||'';
+  document.getElementById('phInp').value=p.order_phone||DEF_PHONE;
+  document.getElementById('mtInp').value=p.order_message_template||'';
+  document.getElementById('hotChk').checked=!!p.hot_product;
+  if(p.tags){p.tags.forEach(t=>allTags.add(t));selTags=new Set(p.tags)}else selTags=new Set();
+  renderTags();
+  existing=[...(p.images||[])];pending=[];renderPreviews();
+  document.getElementById('formIcon').textContent='✏️';
+  document.getElementById('formTitle').textContent='Edit Meal';
+  document.getElementById('formSub').textContent='Editing: '+p.title;
+  document.getElementById('delBtn').classList.remove('hidden');
+  document.getElementById('formMsg').classList.remove('on');
+  document.querySelector('.sec').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ── CLEAR ── */
+function clearForm(){
+  editId=null;
+  ['prodId','tInp','size1','price1','size2','price2','size3','price3','dInp','descInp','sInp','mtInp'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('phInp').value=DEF_PHONE;
+  document.getElementById('hotChk').checked=false;
+  selTags=new Set();pending.forEach(pf=>URL.revokeObjectURL(pf.localUrl));pending=[];existing=[];
+  renderPreviews();renderTags();
+  document.getElementById('formIcon').textContent='➕';
+  document.getElementById('formTitle').textContent='Add New Meal';
+  document.getElementById('formSub').textContent='Fill in the details to add a meal to your menu.';
+  document.getElementById('delBtn').classList.add('hidden');
+  document.getElementById('formMsg').classList.remove('on');
+  document.getElementById('progWrap').classList.remove('on');
+}
+
+function showMsg(txt,type){
+  const m=document.getElementById('formMsg');m.textContent=txt;m.className='smsg on '+type;
+  setTimeout(()=>m.classList.remove('on'),4000);
+}
+
+/* ── ANALYTICS ── */
+async function loadAnalytics(){
+  const{data,error}=await sb.from('analytics').select('*').order('created_at',{ascending:false}).limit(200);
+  if(error){console.error(error);return}
+  const rows=data||[];
+  const visits=rows.filter(r=>r.event==='visit').length;
+  const wa=rows.filter(r=>r.event==='checkout_whatsapp').length;
+  const ig=rows.filter(r=>r.event==='checkout_instagram').length;
+  const total=wa+ig;
+  const cvr=visits?Math.round(total/visits*100):0;
+  document.getElementById('sVisit').textContent=visits;
+  document.getElementById('sWA').textContent=wa;
+  document.getElementById('sIG').textContent=ig;
+  document.getElementById('sCVR').textContent=cvr+'%';
+  const tbody=document.getElementById('logBody');
+  const recent=rows.slice(0,50);
+  if(!recent.length){tbody.innerHTML=`<tr><td colspan="3" style="color:var(--muted);padding:20px;text-align:center">No events yet.</td></tr>`;return}
+  tbody.innerHTML=recent.map(r=>{
+    const d=new Date(r.created_at);
+    const date=d.toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'});
+    const time=d.toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'});
+    let badge='';
+    if(r.event==='visit')badge=`<span class="ev-badge visit">👁 Visit</span>`;
+    else if(r.event==='checkout_whatsapp')badge=`<span class="ev-badge wa">💬 WhatsApp Order</span>`;
+    else if(r.event==='checkout_instagram')badge=`<span class="ev-badge ig">📸 Instagram Order</span>`;
+    else badge=`<span class="ev-badge visit">${r.event}</span>`;
+    return`<tr><td>${badge}</td><td>${date}</td><td>${time}</td></tr>`;
+  }).join('');
+}
+
+/* ── INIT ── */
+renderTags();
+loadProds();
+</script>
+</body>
+</html>

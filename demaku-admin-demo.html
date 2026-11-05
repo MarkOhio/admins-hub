@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デマーク · Admin Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=IM+Fell+English:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#111111;--surface:#181818;--surface2:#202020;
+  --border:rgba(255,255,255,0.07);--border-mid:rgba(255,255,255,0.14);--border-hi:rgba(255,255,255,0.32);
+  --text:#fff;--text-mid:rgba(255,255,255,0.55);--text-low:rgba(255,255,255,0.25);
+  --cw:324px;--ch:405px;--bt:6px;--bth:1.5px;
+  --sw:230px;--tr:0.32s cubic-bezier(0.4,0,0.2,1);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);min-height:100vh;font-family:'Cormorant Garamond',serif;color:var(--text);overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9998;opacity:0.45}
+
+/* ══ PAGE LOAD ANIMATIONS ══ */
+.sidebar{
+  position:fixed;top:0;left:0;width:var(--sw);height:100vh;
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:200;
+  transition:transform var(--tr);overflow:hidden;
+  /* load anim */
+  transform:translateX(calc(-1 * var(--sw)));
+}
+body.sb-open .sidebar{transform:translateX(0)}
+body:not(.sb-open) .sidebar{transform:translateX(calc(-1 * var(--sw)))}
+/* After load, sidebar transitions with a different duration for toggle */
+body.loaded .sidebar{transition:transform var(--tr)}
+
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 36px 16px 62px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;background:var(--bg);
+  /* load anim */
+  transform:translateY(-100%);opacity:0;
+  transition:transform 0.55s cubic-bezier(0.4,0,0.2,1) 0.05s, opacity 0.55s ease 0.05s;
+}
+body.loaded .topbar{transform:translateY(0);opacity:1}
+
+.main{
+  margin-left:var(--sw);min-height:100vh;
+  transition:margin-left var(--tr);
+  /* load anim */
+  transform:translateY(60px);opacity:0;
+  transition:transform 0.6s cubic-bezier(0.4,0,0.2,1) 0.1s, opacity 0.6s ease 0.1s, margin-left var(--tr);
+}
+body.loaded .main{transform:translateY(0);opacity:1}
+body:not(.sb-open) .main{margin-left:0}
+
+/* Sidebar toggle */
+.sb-toggle{
+  position:fixed;top:18px;left:18px;z-index:300;
+  width:34px;height:34px;background:var(--surface);
+  border:1px solid var(--border-mid);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  transition:left var(--tr),border-color 0.2s;
+  /* load anim */
+  opacity:0;transform:translateY(-20px);
+  transition:left var(--tr),border-color 0.2s,opacity 0.4s ease 0.0s,transform 0.4s ease 0.0s;
+}
+body.loaded .sb-toggle{opacity:1;transform:translateY(0)}
+body.sb-open .sb-toggle{left:calc(var(--sw) + 14px)}
+.sb-toggle:hover{border-color:var(--border-hi)}
+.sb-toggle span{display:block;width:15px;height:1px;background:var(--text-mid)}
+
+/* Sidebar brand/nav */
+.sb-brand{padding:28px 24px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-brand .jp{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:900;letter-spacing:1px;display:block}
+.sb-brand .en{font-size:9px;letter-spacing:6px;color:var(--text-low);text-transform:uppercase;margin-top:4px;display:block}
+.sb-brand .role{font-size:8px;letter-spacing:4px;color:var(--text-low);text-transform:uppercase;margin-top:10px;display:inline-block;padding:3px 8px;border:1px solid var(--border)}
+.sb-nav{padding:20px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 24px;cursor:pointer;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-low);transition:all 0.2s;border-left:2px solid transparent}
+.nav-item:hover{color:var(--text-mid);background:rgba(255,255,255,0.02)}
+.nav-item.active{color:var(--text);border-left-color:#fff;background:rgba(255,255,255,0.03)}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sb-footer{padding:18px 24px;border-top:1px solid var(--border);font-size:9px;letter-spacing:2px;color:var(--text-low);text-transform:uppercase;flex-shrink:0}
+
+/* VIEWS */
+.view{display:none;padding:0 0 80px}
+.view.active{display:block}
+
+/* TOPBAR INTERNALS */
+.tb-title{display:flex;align-items:baseline;gap:14px}
+.tb-title .jp{font-family:'Noto Serif JP',serif;font-size:19px;font-weight:900}
+.tb-title .sub{font-size:10px;letter-spacing:4px;color:var(--text-low);text-transform:uppercase}
+.tb-actions{display:flex;gap:8px;align-items:center}
+.lt{display:flex;border:1px solid var(--border-mid);overflow:hidden}
+.lt-btn{padding:6px 13px;font-family:'Cormorant Garamond',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;background:transparent;border:none;color:var(--text-low);transition:all 0.2s}
+.lt-btn.active{background:rgba(255,255,255,0.08);color:var(--text)}
+.lt-btn:not(.active):hover{color:var(--text-mid)}
+
+/* BUTTONS */
+.btn{font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;padding:8px 18px;border:1px solid var(--border-mid);background:transparent;color:var(--text-mid);transition:all 0.2s;position:relative;overflow:hidden;white-space:nowrap}
+.btn:hover{border-color:var(--border-hi);color:var(--text)}
+.btn.primary{border-color:rgba(255,255,255,0.4);color:var(--text);background:rgba(255,255,255,0.04)}
+.btn.primary:hover{background:rgba(255,255,255,0.09)}
+.btn.danger{border-color:rgba(255,70,70,0.35);color:rgba(255,110,110,0.8)}
+.btn.danger:hover{border-color:rgba(255,70,70,0.6);color:rgba(255,130,130,1)}
+.btn:disabled{opacity:0.3;cursor:not-allowed;pointer-events:none}
+
+/* BUILDER */
+.builder-wrap{padding:28px 36px 40px}
+.builder-layout{display:grid;grid-template-columns:1fr 360px;gap:36px;align-items:start}
+.builder-layout.stacked{grid-template-columns:1fr}
+.builder-layout.stacked .preview-sec{position:static}
+.builder-layout.stacked .card-stack{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:20px}
+
+/* PANELS — slide in from right on load */
+.panels{display:flex;flex-direction:column;gap:14px}
+.panel{
+  background:var(--surface);border:1px solid var(--border);overflow:hidden;
+  opacity:0;transform:translateX(40px);
+  transition:opacity 0.5s ease,transform 0.5s ease;
+}
+.panel.panel-visible{opacity:1;transform:translateX(0)}
+/* stagger via nth */
+.panel:nth-child(1){transition-delay:0.0s}
+.panel:nth-child(2){transition-delay:0.08s}
+.panel:nth-child(3){transition-delay:0.16s}
+.panel:nth-child(4){transition-delay:0.24s}
+.pnl-head{display:flex;align-items:center;justify-content:space-between;padding:13px 17px;border-bottom:1px solid transparent;cursor:pointer;transition:background 0.2s;user-select:none}
+.pnl-head:hover{background:rgba(255,255,255,0.02)}
+.panel.open .pnl-head{border-bottom-color:var(--border)}
+.pnl-hl{display:flex;align-items:center;gap:9px}
+.pnl-num{font-family:'Noto Serif JP',serif;font-size:10px;color:var(--text-low);letter-spacing:2px}
+.pnl-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text-mid)}
+.pnl-chev{font-size:9px;color:var(--text-low);transition:transform 0.25s;display:inline-block}
+.panel.open .pnl-chev{transform:rotate(180deg)}
+.pnl-body{display:none;padding:16px}
+.panel.open .pnl-body{display:block}
+
+/* FORM ELEMENTS */
+.field{margin-bottom:13px}.field:last-child{margin-bottom:0}
+.fl{font-size:8px;letter-spacing:4px;color:var(--text-low);text-transform:uppercase;margin-bottom:6px;display:block}
+.field input,.field textarea,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:0.5px;padding:8px 12px;outline:none;transition:border-color 0.2s;appearance:none}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--border-hi)}
+.field textarea{resize:vertical;min-height:52px}
+
+/* UPLOAD ZONE */
+.uz{border:1px dashed var(--border-mid);padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.uz:hover{border-color:var(--border-hi);background:rgba(255,255,255,0.02)}
+.uz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uz-icon{font-size:16px;margin-bottom:5px;opacity:0.22;display:block}
+.uz-txt{font-size:9px;letter-spacing:3px;color:var(--text-low);text-transform:uppercase}
+.uz-prev{width:100%;height:60px;background-size:contain;background-position:center;background-repeat:no-repeat;margin-top:9px;display:none}
+.uz.has-img .uz-prev{display:block}
+.uz.has-img .uz-icon,.uz.has-img .uz-txt{opacity:0.3;font-size:8px}
+
+/* PREVIEW SECTION */
+.preview-sec{position:sticky;top:74px}
+.prev-label{font-size:9px;letter-spacing:5px;color:var(--text-low);text-transform:uppercase;margin-bottom:14px;display:block}
+.color-strip{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+.col-btn{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all 0.2s;flex-shrink:0}
+.col-btn.active{border-color:#fff;transform:scale(1.15)}
+.card-stack{display:flex;flex-direction:column;gap:14px;align-items:center}
+
+/* Cards — scroll-triggered drop-in */
+.cw{
+  display:flex;flex-direction:column;align-items:center;gap:9px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity 0.5s ease,transform 0.5s ease;
+}
+.cw.card-visible{opacity:1;transform:translateY(0)}
+
+/* CARD BASE */
+.card{width:var(--cw);height:var(--ch);background:#111111;position:relative;overflow:hidden;cursor:default;flex-shrink:0}
+.card .bg-layer{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.22;z-index:0;pointer-events:none}
+.card .shirt-layer{position:absolute;inset:0;background-size:contain;background-position:center;background-repeat:no-repeat;z-index:1;pointer-events:none}
+/* Upload hint sits inside card — z-index 5 so it's above shirt but below blend */
+.card .up-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;cursor:pointer}
+.card .up-hint input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.card .up-hint .ht{font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.25);text-transform:uppercase;text-align:center;pointer-events:none;border:1px dashed rgba(255,255,255,0.15);padding:9px 16px}
+.card.has-img .up-hint .ht{display:none}
+.blend-layer{position:absolute;inset:0;z-index:12;pointer-events:none;mix-blend-mode:difference}
+.blend-layer .corner-label{position:absolute;top:14px;left:14px;line-height:1.1}
+.blend-layer .corner-label .jp{font-family:'Noto Serif JP',serif;font-size:32px;font-weight:900;color:#fff;display:block}
+.blend-layer .corner-label .en{font-family:'IM Fell English',serif;font-size:13px;color:#fff;letter-spacing:1px;display:block;margin-top:2px;padding-left:2px}
+.blend-layer .corner-logo{position:absolute;bottom:18px;right:16px;text-align:right}
+.blend-layer .corner-logo .logo-jp{font-family:'Noto Serif JP',serif;font-size:26px;font-weight:900;color:#fff;display:block;line-height:1}
+.blend-layer .corner-logo .logo-en{font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:4px;color:#fff;display:block;margin-top:4px}
+.blend-layer .top-logo{position:absolute;top:18px;left:0;right:0;text-align:center}
+.blend-layer .top-logo .logo-jp{font-family:'Noto Serif JP',serif;font-size:28px;font-weight:900;color:#fff;display:block;line-height:1}
+.blend-layer .top-logo .logo-en{font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:5px;color:#fff;display:block;margin-top:5px}
+/* .card-side{border-left:var(--bt) solid #fff;border-top:var(--bth) solid #fff;border-bottom:var(--bt) solid #fff}
+.card-top{border-top:var(--bt) solid #fff;border-bottom:var(--bt) solid #fff} */
+.card-top::before{content:'';position:absolute;top:8px;left:0;right:0;height:var(--bth);background:#fff;z-index:20;pointer-events:none;mix-blend-mode:difference}
+.card-top::after{content:'';position:absolute;bottom:8px;left:0;right:0;height:var(--bth);background:#fff;z-index:20;pointer-events:none;mix-blend-mode:difference}
+.card-top .shirt-area{position:absolute;top:5px;left:0;right:0;bottom:10px;z-index:1}
+.card-top .shirt-area .shirt-layer{position:absolute;inset:0;background-size:contain;background-position:center;background-repeat:no-repeat}
+.card-top .dotted-divider{position:absolute;bottom:68px;left:16px;right:16px;border-bottom:1.5px dashed rgba(255,255,255,0.3);z-index:15;pointer-events:none}
+/* text-zone: z-index 16, mix-blend-mode difference, contenteditable */
+.card-top .text-zone{
+  position:absolute;
+  bottom: 26px;
+    left: 16px;
+    right: 16px;
+    z-index: 16;
+    text-align: center;
+  z-index:16;mix-blend-mode:difference;
+  font-family:'Cormorant Garamond',serif;font-size:12px;letter-spacing:2px;color:#fff;text-transform:uppercase;
+  outline:none;cursor:text;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1em;
+}
+.card-top .text-zone:empty::before{content:attr(data-placeholder);opacity:0.35}
+
+/* Card 3 hint must NOT cover the text zone */
+#pc3 .up-hint{bottom:52px} /* leave room for text zone at bottom */
+
+/* BONUS CARD */
+.card-bonus .bonus-center{position:absolute;top:80px;left:0;right:0;bottom:72px;z-index:2;display:flex;align-items:center;justify-content:center}
+.bonus-img-layer{width:100%;height:100%;background-size:contain;background-position:center;background-repeat:no-repeat}
+
+.clbl{font-size:9px;letter-spacing:5px;color:var(--text-low);text-transform:uppercase}
+.csub{display:flex;gap:7px;margin-top:1px}
+.csub-btn{font-family:'Cormorant Garamond',serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:4px 11px;background:transparent;border:1px solid var(--border);color:var(--text-low);cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.csub-btn:hover{border-color:var(--border-hi);color:var(--text)}
+.csub-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* COLOR VARIANTS */
+.variants-list{display:flex;flex-direction:column;gap:9px;margin-bottom:11px}
+.cvb{border:1px solid var(--border);background:var(--surface2);overflow:hidden}
+.cvb-head{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border)}
+.cvb-sw{width:15px;height:15px;border-radius:50%;border:1px solid var(--border-mid);flex-shrink:0}
+.cvb-hex{font-size:10px;letter-spacing:2px;color:var(--text-mid);font-family:monospace;flex:1}
+.cvb-rm{font-size:8px;letter-spacing:2px;color:var(--text-low);cursor:pointer;text-transform:uppercase;padding:2px 6px;border:1px solid transparent;transition:all 0.2s;font-family:'Cormorant Garamond',serif;background:none}
+.cvb-rm:hover{border-color:rgba(255,60,60,0.3);color:rgba(255,100,100,0.8)}
+.cvb-imgs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:9px}
+.cvi-slot{border:1px dashed var(--border);padding:9px 7px;text-align:center;cursor:pointer;position:relative;overflow:hidden;transition:all 0.2s}
+.cvi-slot:hover{border-color:var(--border-hi)}
+.cvi-slot input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.cvi-lbl{font-size:8px;letter-spacing:3px;color:var(--text-low);text-transform:uppercase}
+.cvi-prev{width:100%;height:48px;background-size:contain;background-position:center;background-repeat:no-repeat;display:none;margin-top:5px}
+.cvi-slot.has-img .cvi-prev{display:block}
+.add-col-row{display:flex;gap:8px;align-items:center}
+.hex-dot{width:26px;height:26px;border-radius:50%;border:1px solid var(--border-mid);flex-shrink:0;background:#333;transition:background 0.2s}
+.hex-inp{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:monospace;font-size:13px;padding:6px 10px;outline:none;transition:border-color 0.2s}
+.hex-inp:focus{border-color:var(--border-hi)}
+
+/* PRICING */
+.tier-block{margin-bottom:16px}.tier-block:last-of-type{margin-bottom:0}
+.tier-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.tier-name{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--text-mid)}
+.tier-add{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--text-low);cursor:pointer;padding:3px 8px;border:1px solid var(--border);background:transparent;transition:all 0.2s;font-family:'Cormorant Garamond',serif}
+.tier-add:hover{border-color:var(--border-hi);color:var(--text)}
+.tier-prices{display:flex;flex-direction:column;gap:6px}
+.price-row{display:flex;gap:6px;align-items:center}
+.price-row input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:14px;padding:6px 10px;outline:none;transition:border-color 0.2s;flex:1}
+.price-row input:focus{border-color:var(--border-hi)}
+.pr-amt{flex:0.65 !important}
+.pr-rm{font-size:13px;color:var(--text-low);cursor:pointer;padding:3px;background:none;border:none;transition:color 0.2s;line-height:1}
+.pr-rm:hover{color:rgba(255,100,100,0.8)}
+.tier-empty{font-size:9px;letter-spacing:2px;color:var(--text-low);text-align:center;padding:9px;border:1px dashed var(--border);text-transform:uppercase}
+.def-row{display:flex;gap:6px;margin-top:13px}
+.def-btn{flex:1;padding:6px;border:1px solid var(--border);background:transparent;color:var(--text-low);font-family:'Cormorant Garamond',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+.def-btn.active{border-color:var(--text);color:var(--text);background:rgba(255,255,255,0.05)}
+
+/* BONUS */
+.bonus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.bonus-item{border:1px dashed var(--border);padding:9px 5px;text-align:center;cursor:pointer;position:relative;overflow:hidden;transition:all 0.2s;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.bonus-item:hover{border-color:var(--border-hi)}
+.bonus-item input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.bi-icon{font-size:15px;opacity:0.2}
+.bi-inp{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:8px;letter-spacing:2px;text-align:center;padding:2px;outline:none;text-transform:uppercase;position:relative;z-index:2}
+.bi-prev{width:100%;height:48px;background-size:contain;background-position:center;background-repeat:no-repeat;display:none}
+.bonus-item.has-img .bi-prev{display:block}.bonus-item.has-img .bi-icon{display:none}
+.bonus-add{cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ba-plus{font-size:18px;opacity:0.2}
+
+/* UPLOAD AREA */
+.up-area{margin-top:14px}
+.offline-banner{display:none;padding:9px 13px;border:1px solid rgba(255,180,50,0.3);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,200,80,0.85);background:rgba(255,180,50,0.04);margin-bottom:10px}
+.offline-banner.show{display:block}
+.prog-bar{display:none;height:2px;background:var(--border);overflow:hidden}
+.prog-bar.active{display:block}
+.prog-fill{height:100%;background:#fff;width:0%;transition:width 0.32s ease}
+.up-stat{font-size:9px;letter-spacing:3px;color:var(--text-low);text-transform:uppercase;margin-top:6px;text-align:center;display:none}
+.up-stat.active{display:block}
+
+/* PRODUCTS */
+.products-wrap{padding:28px 36px 40px}
+.prod-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.search-box{flex:1;min-width:180px;background:var(--surface);border:1px solid var(--border);padding:8px 13px;color:var(--text);font-family:'Cormorant Garamond',serif;font-size:14px;outline:none;transition:border-color 0.2s}
+.search-box::placeholder{color:var(--text-low);letter-spacing:2px;font-size:12px}
+.search-box:focus{border-color:var(--border-hi)}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.prod-card{background:var(--surface);border:1px solid var(--border);overflow:hidden;transition:all 0.28s}
+.prod-card:hover{border-color:var(--border-hi);transform:translateY(-2px)}
+.pc-thumb{width:100%;height:150px;background:#111;background-size:cover;background-position:center;position:relative}
+.pc-thumb-ov{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.65))}
+.pc-badge{position:absolute;top:9px;right:9px;font-size:7px;letter-spacing:3px;text-transform:uppercase;padding:3px 7px;border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.5);background:rgba(0,0,0,0.5)}
+.pc-badge.live{border-color:rgba(100,220,100,0.35);color:rgba(120,220,120,0.9)}
+.pc-body{padding:13px 15px}
+.pc-code{font-size:8px;letter-spacing:4px;color:var(--text-low);text-transform:uppercase;margin-bottom:4px;display:block}
+.pc-name{font-family:'Noto Serif JP',serif;font-size:14px;font-weight:700;margin-bottom:9px;line-height:1.3}
+.pc-chips{display:flex;gap:5px;flex-wrap:wrap}
+.pc-chip{font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:2px 6px;border:1px solid var(--border);color:var(--text-low)}
+.pc-acts{display:flex;gap:7px;padding:9px 13px;border-top:1px solid var(--border)}
+.pc-acts .btn{font-size:8px;padding:5px 11px;flex:1;text-align:center}
+.empty-state{text-align:center;padding:56px 40px;border:1px dashed var(--border);grid-column:1/-1}
+.empty-state .es-jp{font-family:'Noto Serif JP',serif;font-size:40px;opacity:0.08;display:block;margin-bottom:12px}
+.empty-state .es-txt{font-size:10px;letter-spacing:3px;color:var(--text-low);text-transform:uppercase}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-ov.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border-hi);padding:26px;max-width:400px;width:90%}
+.modal-title{font-family:'Noto Serif JP',serif;font-size:18px;font-weight:700;margin-bottom:9px}
+.modal-text{font-size:14px;color:var(--text-mid);line-height:1.6;margin-bottom:20px}
+.modal-acts{display:flex;gap:9px;justify-content:flex-end}
+
+/* TOAST */
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(14px);background:rgba(14,14,14,0.97);border:1px solid var(--border-hi);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:3px;padding:10px 24px;text-transform:uppercase;opacity:0;pointer-events:none;transition:all 0.26s;z-index:1000;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(100,220,100,0.4)}
+.toast.err{border-color:rgba(255,70,70,0.4)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border-mid)}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.builder-layout{grid-template-columns:1fr}.preview-sec{position:static}.card-stack{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:18px}.lt{display:none}}
+@media(max-width:768px){.sidebar{width:200px}.topbar{padding:13px 18px 13px 52px}.builder-wrap,.products-wrap{padding:18px 14px 40px}.builder-layout{grid-template-columns:1fr}.card-stack{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:14px}.lt{display:none}:root{--cw:280px;--ch:350px}}
+@media(max-width:480px){:root{--cw:240px;--ch:300px}.products-grid{grid-template-columns:1fr}}
+
+/* ═══════ ANALYTICS ═══════ */
+.analytics-stat{background:var(--surface);border:1px solid var(--border);padding:20px 24px;display:flex;flex-direction:column;gap:8px}
+.as-label{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--text-low)}
+.as-val{font-family:'Noto Serif JP',serif;font-size:32px;font-weight:900;line-height:1}
+.series-row{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.series-row input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:14px;padding:7px 11px;outline:none;transition:border-color 0.2s;flex:1}
+.series-row input:focus{border-color:var(--border-hi)}
+.series-row .sr-count{display:flex;align-items:center;gap:6px}
+.series-row .sr-count button{width:28px;height:28px;background:var(--surface2);border:1px solid var(--border);color:var(--text-mid);cursor:pointer;font-size:16px;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+.series-row .sr-count button:hover{border-color:var(--border-hi);color:var(--text)}
+.series-row .sr-num{font-family:'Noto Serif JP',serif;font-size:18px;font-weight:700;min-width:40px;text-align:center}
+/* ═══════ END ANALYTICS ═══════ */
+
+</style>
+<style>.showcase-notice{position:sticky;top:0;z-index:9997;padding:7px 12px;text-align:center;background:#252018;color:#f4c36b;border-bottom:1px solid rgba(245,166,35,.25);font:500 11px/1.4 system-ui,sans-serif;letter-spacing:.02em}.showcase-notice strong{font-weight:700}@media(max-width:480px){.showcase-notice{font-size:10px;padding:6px 8px}}</style>
+</head>
+<body class="sb-open">
+<div class="showcase-notice"><strong>SHOWCASE DEMO</strong> · Sample data only — not connected to the live admin. Live administration requires login.</div>
+
+<button class="sb-toggle" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+
+<nav class="sidebar">
+  <div class="sb-brand">
+    <span class="jp">デマーク</span>
+    <span class="en">D e m ā k u</span>
+    <span class="role">Admin Studio</span>
+  </div>
+  <div class="sb-nav">
+    <div class="nav-item active" onclick="showView('builder')" id="nav-builder"><span class="nav-dot"></span><span>Builder</span></div>
+    <div class="nav-item" onclick="showView('products')" id="nav-products"><span class="nav-dot"></span><span>Products</span></div>
+    <div class="nav-item" onclick="showView('analytics')" id="nav-analytics"><span class="nav-dot"></span><span>Analytics</span></div>
+    <div class="nav-item" onclick="showView('templates')" id="nav-templates"><span class="nav-dot"></span><span>Templates</span></div>
+  </div>
+  <div class="sb-footer">デマーク · 2025</div>
+</nav>
+
+<main class="main">
+
+  <!-- BUILDER -->
+  <div class="view active" id="view-builder">
+    <div class="topbar">
+      <div class="tb-title">
+        <span class="jp">新製品</span>
+        <span class="sub" id="mode-lbl">New Product</span>
+      </div>
+      <div class="tb-actions">
+        <div class="lt"><button class="lt-btn active" id="lt-side" onclick="setLayout('side')">Side</button><button class="lt-btn" id="lt-stack" onclick="setLayout('stack')">Stack</button></div>
+        <button class="btn" onclick="confirmClear()">Clear</button>
+        <button class="btn primary" id="upload-btn" onclick="handleUpload()">Upload to Storefront</button>
+      </div>
+    </div>
+
+    <div class="builder-wrap">
+      <div class="builder-layout" id="bld-layout">
+
+        <div class="panels" id="panels-container">
+
+          <!-- 01 INFO -->
+          <div class="panel open" id="pnl-info">
+            <div class="pnl-head" onclick="togglePanel('pnl-info')"><div class="pnl-hl"><span class="pnl-num">01</span><span class="pnl-title">Product Info</span></div><span class="pnl-chev">▲</span></div>
+            <div class="pnl-body">
+              <div class="field"><label class="fl">Product Code</label><input type="text" id="f-code" placeholder="001" maxlength="8" oninput="autosave()"></div>
+              <div class="field"><label class="fl">Product Name <span style="opacity:.4;font-size:8px;letter-spacing:2px">— shows on card 3 bottom text</span></label><input type="text" id="f-name" placeholder="001 · Dragon Ball Z Series" oninput="syncName();autosave()"></div>
+              <div class="field"><label class="fl">Collection Header / Tagline <span style="opacity:.4;font-size:8px;letter-spacing:2px">— shown above product on storefront</span></label><input type="text" id="f-tagline" placeholder="Dragon Ball Z Merch · Limited Edition" oninput="autosave()"></div>
+              <div class="field">
+                <label class="fl">Background Image (shared across all cards)</label>
+                <div class="uz" id="uz-bg">
+                  <input type="file" accept="image/*" onchange="loadBg(this)">
+                  <span class="uz-icon">⬡</span>
+                  <div class="uz-txt">Tap to upload background</div>
+                  <div class="uz-prev" id="uz-bg-prev"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 02 COLORS -->
+          <div class="panel" id="pnl-colors">
+            <div class="pnl-head" onclick="togglePanel('pnl-colors')"><div class="pnl-hl"><span class="pnl-num">02</span><span class="pnl-title">Colors & Shirt Images</span></div><span class="pnl-chev">▲</span></div>
+            <div class="pnl-body">
+              <div class="variants-list" id="variants-list"></div>
+              <div class="add-col-row">
+                <div class="hex-dot" id="hex-dot"></div>
+                <input type="text" class="hex-inp" id="hex-inp" placeholder="#1a1a1a" maxlength="7" oninput="previewHex(this.value)">
+                <button class="btn" onclick="addVariant()">+ Color</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 03 PRICING -->
+          <div class="panel" id="pnl-prices">
+            <div class="pnl-head" onclick="togglePanel('pnl-prices')"><div class="pnl-hl"><span class="pnl-num">03</span><span class="pnl-title">Pricing Tiers</span></div><span class="pnl-chev">▲</span></div>
+            <div class="pnl-body">
+              <div class="tier-block"><div class="tier-head"><span class="tier-name">Signature <span style="font-size:8px;letter-spacing:1px;opacity:.5">(premium)</span></span><button class="tier-add" onclick="addPrice('premium')">+ Add</button></div><div class="tier-prices" id="tp-premium"><div class="tier-empty">No prices</div></div></div>
+              <div class="tier-block"><div class="tier-head"><span class="tier-name">Classic <span style="font-size:8px;letter-spacing:1px;opacity:.5">(best)</span></span><button class="tier-add" onclick="addPrice('best')">+ Add</button></div><div class="tier-prices" id="tp-best"><div class="tier-empty">No prices</div></div></div>
+              <div class="tier-block"><div class="tier-head"><span class="tier-name">Essential <span style="font-size:8px;letter-spacing:1px;opacity:.5">(affordable)</span></span><button class="tier-add" onclick="addPrice('affordable')">+ Add</button></div><div class="tier-prices" id="tp-affordable"><div class="tier-empty">No prices</div></div></div>
+              <div class="field" style="margin-top:14px">
+                <label class="fl">Default tier shown on storefront</label>
+                <div class="def-row">
+                  <button class="def-btn" data-tier="premium" onclick="setDefTier('premium')">Signature</button>
+                  <button class="def-btn active" data-tier="best" onclick="setDefTier('best')">Classic</button>
+                  <button class="def-btn" data-tier="affordable" onclick="setDefTier('affordable')">Essential</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 04 BONUS -->
+          <div class="panel" id="pnl-bonus">
+            <div class="pnl-head" onclick="togglePanel('pnl-bonus')"><div class="pnl-hl"><span class="pnl-num">04</span><span class="pnl-title">What Comes With the Shirt</span></div><span class="pnl-chev">▲</span></div>
+            <div class="pnl-body">
+              <div class="bonus-grid" id="bonus-grid"><div class="bonus-item bonus-add" onclick="addBonus()"><span class="ba-plus">+</span></div></div>
+            </div>
+          </div>
+
+          <div class="up-area">
+            <div class="offline-banner" id="offline-banner">⚠ No internet — will upload when reconnected</div>
+            <div class="prog-bar" id="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+            <div class="up-stat" id="up-stat">Preparing…</div>
+          </div>
+
+        </div><!-- /panels -->
+
+        <!-- PREVIEW -->
+        <div class="preview-sec" id="preview-sec">
+          <span class="prev-label">Live Preview</span>
+          <div class="color-strip" id="color-strip"></div>
+          <div class="card-stack" id="card-stack">
+
+            <!-- Card 1: Front — independent upload -->
+            <div class="cw" id="cw1">
+              <div class="card card-side" id="pc1">
+                <div class="bg-layer" id="pbg1"></div>
+                <div class="shirt-layer" id="psl1"></div>
+                <div class="blend-layer">
+                  <div class="corner-label"><span class="jp">フロント</span><span class="en">Front</span></div>
+                  <div class="corner-logo"><span class="logo-jp">デマーク</span><span class="logo-en">D e m ā k u</span></div>
+                </div>
+                <div class="up-hint" id="ph1"><input type="file" accept="image/*" onchange="quickCard(this,1)"><div class="ht">Tap · Upload Front</div></div>
+              </div>
+              <span class="clbl">Slide 1 · Front</span>
+              <div class="csub"><button class="csub-btn">Change<input type="file" accept="image/*" onchange="quickCard(this,1)"></button></div>
+            </div>
+
+            <!-- Card 2: Back — independent upload -->
+            <div class="cw" id="cw2">
+              <div class="card card-side" id="pc2">
+                <div class="bg-layer" id="pbg2"></div>
+                <div class="shirt-layer" id="psl2"></div>
+                <div class="blend-layer">
+                  <div class="corner-label"><span class="jp">戻る</span><span class="en">Back</span></div>
+                  <div class="corner-logo"><span class="logo-jp">デマーク</span><span class="logo-en">D e m ā k u</span></div>
+                </div>
+                <div class="up-hint" id="ph2"><input type="file" accept="image/*" onchange="quickCard(this,2)"><div class="ht">Tap · Upload Back</div></div>
+              </div>
+              <span class="clbl">Slide 2 · Back</span>
+              <div class="csub"><button class="csub-btn">Change<input type="file" accept="image/*" onchange="quickCard(this,2)"></button></div>
+            </div>
+
+            <!-- Card 3: Tagline — its own independent image upload -->
+            <div class="cw" id="cw3">
+              <div class="card card-top" id="pc3">
+                <div class="bg-layer" id="pbg3"></div>
+                <div class="shirt-area"><div class="shirt-layer" id="psl3"></div></div>
+                <div class="blend-layer"><div class="top-logo"><span class="logo-jp">デマーク</span><span class="logo-en">D e m ā k u</span></div></div>
+                <!-- hint area restricted to top portion, leaves room for text zone -->
+                <div class="up-hint" id="ph3"><input type="file" accept="image/*" onchange="quickCard(this,3)"><div class="ht">Tap · Upload Image</div></div>
+                <div class="dotted-divider"></div>
+                <!-- text-zone shows product name (not tagline) -->
+                <div class="text-zone" id="p-name-card" contenteditable="true" data-placeholder="001 · Series Name" spellcheck="false" oninput="syncNameFromCard(this)"></div>
+              </div>
+              <span class="clbl">Slide 3 · Tagline</span>
+              <div class="csub"><button class="csub-btn">Change<input type="file" accept="image/*" onchange="quickCard(this,3)"></button></div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCTS VIEW -->
+  <div class="view" id="view-products">
+    <div class="topbar">
+      <div class="tb-title"><span class="jp">製品一覧</span><span class="sub">Published Products</span></div>
+      <div class="tb-actions"><button class="btn primary" onclick="showView('builder')">+ New Product</button></div>
+    </div>
+    <div class="products-wrap">
+      <div class="prod-toolbar">
+        <input type="text" class="search-box" id="search-box" placeholder="Search products…" oninput="filterProducts(this.value)">
+      </div>
+      <div class="products-grid" id="products-grid">
+        <div class="empty-state"><span class="es-jp">空</span><span class="es-txt">No products yet</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS VIEW -->
+  <div class="view" id="view-analytics">
+    <div class="topbar">
+      <div class="tb-title"><span class="jp">分析</span><span class="sub">Analytics</span></div>
+      <div class="tb-actions"><button class="btn" onclick="analyticsLoaded=false;loadAnalytics()">Refresh</button></div>
+    </div>
+    <div class="products-wrap">
+      <!-- Stat cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px" id="stat-cards">
+        <div class="analytics-stat" id="stat-visitors"><span class="as-label">Total Visitors</span><span class="as-val" id="astat-visitors">—</span></div>
+        <div class="analytics-stat" id="stat-products"><span class="as-label">Live Products</span><span class="as-val" id="astat-products">—</span></div>
+        <div class="analytics-stat" id="stat-series"><span class="as-label">Collections</span><span class="as-val" id="astat-series">—</span></div>
+        <div class="analytics-stat" id="stat-sold"><span class="as-label">Total Units Sold</span><span class="as-val" id="astat-sold">—</span></div>
+      </div>
+      <!-- Series sales table -->
+      <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--text-low)">Series Sales</span>
+        <button class="btn primary" onclick="addSeriesRow()">+ Add Series</button>
+      </div>
+      <div id="series-table"></div>
+    </div>
+  </div>
+
+  <!-- PRICE TEMPLATES VIEW -->
+  <div class="view" id="view-templates">
+    <div class="topbar">
+      <div class="tb-title"><span class="jp">標準価格</span><span class="sub">Price Templates</span></div>
+      <div class="tb-actions">
+        <button class="btn" onclick="templatesLoaded=false;loadTemplates()">Refresh</button>
+        <button class="btn primary" onclick="saveTemplates()">Save All Templates</button>
+      </div>
+    </div>
+    <div class="products-wrap">
+      <p style="font-size:13px;color:var(--text-mid);letter-spacing:1px;margin-bottom:24px;line-height:1.7">Add your standard shirt types and prices here. When you create a new product, these will auto-fill the pricing panels. You can delete or edit individual entries per product before uploading.</p>
+      <div class="tier-block"><div class="tier-head"><span class="tier-name">Premium</span><button class="tier-add" onclick="addTemplateRow('premium')">+ Add</button></div><div class="tier-prices" id="tpl-premium"><div class="tier-empty">No templates</div></div></div>
+      <div class="tier-block" style="margin-top:20px"><div class="tier-head"><span class="tier-name">Best</span><button class="tier-add" onclick="addTemplateRow('best')">+ Add</button></div><div class="tier-prices" id="tpl-best"><div class="tier-empty">No templates</div></div></div>
+      <div class="tier-block" style="margin-top:20px"><div class="tier-head"><span class="tier-name">Affordable</span><button class="tier-add" onclick="addTemplateRow('affordable')">+ Add</button></div><div class="tier-prices" id="tpl-affordable"><div class="tier-empty">No templates</div></div></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="modal-ov" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Confirm</div>
+    <div class="modal-text" id="modal-text"></div>
+    <div class="modal-acts">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" id="modal-ok">OK</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Local showcase database: all changes stay in this browser (localStorage). */
+(function(){
+  const IS_DEMAKU=/demaku-admin-demo/i.test(location.pathname);
+  const KEY=IS_DEMAKU?'showcase_admin_db_v1_demaku':'showcase_admin_db_v1_food';
+  const foodImages=[
+    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=900&q=85',
+    'https://images.unsplash.com/photo-1547592180-85f173990554?w=900&q=85',
+    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=900&q=85',
+    'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=900&q=85',
+    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=900&q=85'
+  ];
+  const fashionImages=[
+    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&q=85',
+    'https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=900&q=85',
+    'https://images.unsplash.com/photo-1527719327859-c6ce80353573?w=900&q=85',
+    'https://images.unsplash.com/photo-155-shirt?auto=format&w=900&q=85',
+    'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=900&q=85'
+  ];
+  const seed={
+    products:[
+      {id:'meal-001',title:'Jollof Rice & Chicken',size_tier1:'Regular',price_tier1:3500,size_tier2:'Large',price_tier2:5000,size_tier3:'Family Pack',price_tier3:8500,price:3500,discount_price:3000,description:'Smoky party-style jollof rice served with grilled chicken.',stock:24,order_phone:'09066231600',order_message_template:'Hello, I would like to order this meal.',hot_product:true,tags:['Lunch','Dinner'],images:[foodImages[0],foodImages[1]],created_at:'2026-10-20T10:00:00Z'},
+      {id:'meal-002',title:'Grilled Chicken Salad',size_tier1:'Regular Bowl',price_tier1:4200,size_tier2:'Large Bowl',price_tier2:6000,size_tier3:null,price:4200,discount_price:null,description:'Fresh greens, grilled chicken and house dressing.',stock:16,order_phone:'09066231600',order_message_template:'Hello, I would like to order this meal.',hot_product:false,tags:['Lunch','Healthy'],images:[foodImages[1]],created_at:'2026-10-19T10:00:00Z'},
+      {id:'meal-003',title:'Classic Beef Burger',size_tier1:'Single',price_tier1:4500,size_tier2:'Double',price_tier2:6500,size_tier3:null,price:4500,discount_price:null,description:'Juicy beef patty with fresh vegetables and house sauce.',stock:12,order_phone:'09066231600',order_message_template:'Hello, I would like to order this meal.',hot_product:true,tags:['Snacks'],images:[foodImages[3]],created_at:'2026-10-18T10:00:00Z'}
+    ],
+    analytics:[{id:'a1',event:'visit',created_at:'2026-11-01T10:00:00Z'},{id:'a2',event:'visit',created_at:'2026-11-01T11:00:00Z'},{id:'a3',event:'checkout_whatsapp',created_at:'2026-11-01T12:00:00Z'},{id:'a4',event:'checkout_instagram',created_at:'2026-11-02T12:00:00Z'}],
+    price_templates:[{id:'t1',name:'Premium',tier:'premium',price:25000,description:'Premium quality'},{id:'t2',name:'Best Seller',tier:'best',price:18000,description:'Most popular choice'},{id:'t3',name:'Affordable',tier:'affordable',price:12000,description:'Everyday value'}],
+    series_sales:[{id:'s1',series_name:'Classic Tee',sales:34},{id:'s2',series_name:'Streetwear Drop',sales:21}],
+    product_variants:[],product_prices:[],product_bonus_items:[],visitor_log:[{id:'v1'},{id:'v2'},{id:'v3'},{id:'v4'}]
+  };
+  if(IS_DEMAKU){
+    seed.products=[
+      {id:'tee-001',product_code:'DMK-001',name:'Everyday Essential Tee',tagline:'Core Collection',background_image_url:fashionImages[0],default_tier:'best',published:true,created_at:'2026-10-25T10:00:00Z'},
+      {id:'tee-002',product_code:'DMK-002',name:'Oversized Street Tee',tagline:'Streetwear Drop',background_image_url:fashionImages[1],default_tier:'premium',published:true,created_at:'2026-10-22T10:00:00Z'},
+      {id:'tee-003',product_code:'DMK-003',name:'Minimal Logo Tee',tagline:'Core Collection',background_image_url:fashionImages[4],default_tier:'affordable',published:false,created_at:'2026-10-18T10:00:00Z'}
+    ];
+    seed.product_variants=[
+      {id:'var-1',product_id:'tee-001',color_hex:'#1a1a1a',front_image_url:fashionImages[0],back_image_url:fashionImages[2],card3_image_url:fashionImages[4],sort_order:0},
+      {id:'var-2',product_id:'tee-001',color_hex:'#e8e2d8',front_image_url:fashionImages[1],back_image_url:fashionImages[3],card3_image_url:fashionImages[4],sort_order:1}
+    ];
+    seed.product_prices=[
+      {id:'price-1',product_id:'tee-001',tier:'best',label:'Classic Cotton Tee',amount:18000,sort_order:0},
+      {id:'price-2',product_id:'tee-001',tier:'premium',label:'Heavyweight Premium Tee',amount:25000,sort_order:0},
+      {id:'price-3',product_id:'tee-001',tier:'affordable',label:'Basic Tee',amount:12000,sort_order:0}
+    ];
+    seed.series_sales=[{id:'s1',series_name:'Core Collection',units_sold:34},{id:'s2',series_name:'Streetwear Drop',units_sold:21}];
+    seed.price_templates=[{id:'t1',tier:'premium',label:'Heavyweight Premium Tee',amount:25000,sort_order:0},{id:'t2',tier:'best',label:'Classic Cotton Tee',amount:18000,sort_order:0},{id:'t3',tier:'affordable',label:'Basic Tee',amount:12000,sort_order:0}];
+  }
+  function read(){try{return JSON.parse(localStorage.getItem(KEY))||JSON.parse(JSON.stringify(seed))}catch(e){return JSON.parse(JSON.stringify(seed))}}
+  let db=read();
+  function persist(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
+  function uid(){return 'demo-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)}
+  class Query{
+    constructor(table){this.table=table;this.action='select';this.filters=[];this.payload=null;this.sort=null;this.max=null;this.returning=false;this.one=false;this.opts={};}
+    select(cols='*',opts={}){this.returning=true;this.opts=opts;return this}
+    insert(rows){this.action='insert';this.payload=Array.isArray(rows)?rows:[rows];return this}
+    update(row){this.action='update';this.payload=row;return this}
+    delete(){this.action='delete';return this}
+    upsert(rows){this.action='upsert';this.payload=Array.isArray(rows)?rows:[rows];return this}
+    eq(k,v){this.filters.push(r=>r[k]===v);return this}
+    neq(k,v){this.filters.push(r=>r[k]!==v);return this}
+    in(k,vs){this.filters.push(r=>vs.includes(r[k]));return this}
+    order(k,o={}){this.sort=[k,o.ascending!==false];return this}
+    limit(n){this.max=n;return this}
+    single(){this.one=true;return this}
+    then(resolve,reject){return Promise.resolve().then(()=>this.run()).then(resolve,reject)}
+    run(){if(!db[this.table])db[this.table]=[];let rows=db[this.table],matched=rows.filter(r=>this.filters.every(f=>f(r))),data=null;
+      if(this.action==='insert'){data=this.payload.map(x=>({...x,id:x.id||uid(),created_at:x.created_at||new Date().toISOString()}));rows.push(...data);persist();}
+      else if(this.action==='upsert'){data=this.payload.map(x=>{let i=rows.findIndex(r=>r.id&&r.id===x.id);if(i<0){let z={...x,id:x.id||uid()};rows.push(z);return z}rows[i]={...rows[i],...x};return rows[i]});persist();}
+      else if(this.action==='update'){matched.forEach(r=>Object.assign(r,this.payload));data=matched;persist();}
+      else if(this.action==='delete'){data=matched.slice();db[this.table]=rows.filter(r=>!matched.includes(r));persist();}
+      else {data=matched.slice();if(this.sort){const [k,asc]=this.sort;data.sort((a,b)=>{let x=a[k]||'',y=b[k]||'';return (x>y?1:x<y?-1:0)*(asc?1:-1)})}if(this.max!==null)data=data.slice(0,this.max);}
+      if(this.one)data=data&&data[0]||null;
+      const count=this.opts.count==='exact'?matched.length:undefined;
+      return {data,error:null,count};
+    }
+  }
+  const client={from:t=>new Query(t),storage:{from:bucket=>({upload:async(path,file)=>{let url='';try{url=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}catch(e){return {data:null,error:{message:'Could not read image in this browser'}}}window.__demoUploads=window.__demoUploads||{};window.__demoUploads[bucket+'/'+path]=url;return {data:{path},error:null}},getPublicUrl:path=>({data:{publicUrl:(window.__demoUploads||{})[bucket+'/'+path]||path}}),remove:async paths=>({data:paths,error:null})})}};
+  window.supabase={createClient:()=>client};
+  window.__demoReset=()=>{db=JSON.parse(JSON.stringify(seed));persist();location.reload()};
+  persist();
+  window.Swal=window.Swal||{fire:async opts=>({isConfirmed:opts&&opts.showCancelButton?confirm(opts.title||'Are you sure?'): (alert(opts.title||''),true)})};
+})();
+
+</script>
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIG — replace with your real Supabase values
+// ══════════════════════════════════════════════════════════
+const SB_URL = 'LOCAL_SHOWCASE_DEMO';
+const SB_KEY = 'LOCAL_ONLY';
+
+const BUCKET = 'demaku-assets';
+
+let _sb = null;
+function getSB() {
+  if (!_sb)  {
+    try { _sb = supabase.createClient(SB_URL, SB_KEY); } catch(e){}
+  }
+  return _sb;
+}
+
+// ── Load-once flags — prevent re-fetching on nav switch ──
+let prodsLoaded=false, analyticsLoaded=false, templatesLoaded=false;
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// Each card has its own independent image now.
+// card1 = front shirt image
+// card2 = back shirt image
+// card3 = dual/tagline image — INDEPENDENT, not linked to card1
+// ══════════════════════════════════════════════════════════
+let bgFile=null, bgDataUrl=null;
+// Per-card image state (independent)
+let cardImgs = {1:{file:null,url:null}, 2:{file:null,url:null}, 3:{file:null,url:null}};
+let variants=[];
+let prices={premium:[],best:[],affordable:[]};
+let bonusItems=[];
+let defTier='best';
+let editingId=null;
+let allProds=[];
+
+// ── AUTOSAVE ──
+let saveTimer;
+function autosave(){ clearTimeout(saveTimer); saveTimer=setTimeout(persistDraft,500); }
+
+function persistDraft(){
+  const d={
+    code:val('f-code'), name:val('f-name'), tagline:val('f-tagline'),
+    bgDataUrl, defTier, editingId,
+    cardImgs:{
+      1:{url:cardImgs[1].url},
+      2:{url:cardImgs[2].url},
+      3:{url:cardImgs[3].url}
+    },
+    variants:variants.map(v=>({hex:v.hex,fUrl:v.fUrl,bUrl:v.bUrl,c3Url:v.c3Url})),
+    prices,
+    bonus:bonusItems.map(b=>({dataUrl:b.dataUrl,label:b.label}))
+  };
+  try{ localStorage.setItem('dmk_draft',JSON.stringify(d)); }catch(e){}
+}
+
+function loadDraft(){
+  try{
+    const raw=localStorage.getItem('dmk_draft');
+    if(!raw) return;
+    const d=JSON.parse(raw);
+    set('f-code',d.code||''); set('f-name',d.name||''); set('f-tagline',d.tagline||'');
+    bgDataUrl=d.bgDataUrl||null; defTier=d.defTier||'best'; editingId=d.editingId||null;
+    prices=d.prices||{premium:[],best:[],affordable:[]};
+    // restore per-card images
+    if(d.cardImgs){
+      [1,2,3].forEach(n=>{
+        const ci=d.cardImgs[n];
+        if(ci&&ci.url){
+          cardImgs[n].url=ci.url;
+          applyCardImg(n,ci.url);
+        }
+      });
+    }
+    if(bgDataUrl){ applyBg(bgDataUrl); setUzImg('uz-bg','uz-bg-prev',bgDataUrl); }
+    variants=[]; g('variants-list').innerHTML='';
+    (d.variants||[]).forEach(v=>buildVariant(v.hex,v.fUrl,v.bUrl,v.c3Url));
+    bonusItems=[]; renderBonusGrid();
+    (d.bonus||[]).forEach(b=>pushBonus(b.dataUrl,b.label));
+    renderAllTiers(); setDefTier(defTier); syncName(); updateModeLbl();
+  }catch(e){}
+}
+function clearDraft(){ localStorage.removeItem('dmk_draft'); }
+
+// ══════════════════════════════════════════════════════════
+// PAGE LOAD ANIMATION
+// ══════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  // Tiny delay so CSS transitions register from the initial state
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.body.classList.add('loaded');
+      // Animate sidebar
+      if(document.body.classList.contains('sb-open')){
+        // sidebar already open class is set, the CSS transition will animate it in
+      }
+      // Trigger panel slide-in after main content appears (650ms delay)
+      setTimeout(animatePanels, 650);
+      // Trigger card drop-in via IntersectionObserver
+      initCardObserver();
+    });
+  });
+
+  if(!navigator.onLine) g('offline-banner').classList.add('show');
+  loadDraft();
+});
+
+function animatePanels(){
+  document.querySelectorAll('.panel').forEach((p,i)=>{
+    setTimeout(()=>p.classList.add('panel-visible'), i*90);
+  });
+}
+
+function initCardObserver(){
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        // stagger siblings by their index in the stack
+        const stack=g('card-stack');
+        const cards=stack.querySelectorAll('.cw');
+        cards.forEach((cw,i)=>{
+          setTimeout(()=>cw.classList.add('card-visible'), i*120);
+        });
+        observer.disconnect();
+      }
+    });
+  },{threshold:0.1});
+  const stack=g('card-stack');
+  if(stack) observer.observe(stack);
+}
+
+// Re-run card observer when new bonus cards are added
+function triggerNewCardAnim(el){
+  setTimeout(()=>el.classList.add('card-visible'),50);
+}
+
+// ══════════════════════════════════════════════════════════
+// SIDEBAR / LAYOUT / NAV
+// ══════════════════════════════════════════════════════════
+function toggleSidebar(){ document.body.classList.toggle('sb-open'); }
+
+function setLayout(m){
+  g('lt-side').classList.toggle('active',m==='side');
+  g('lt-stack').classList.toggle('active',m==='stack');
+  g('bld-layout').classList.toggle('stacked',m==='stack');
+}
+
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  g('view-'+name).classList.add('active');
+  g('nav-'+name).classList.add('active');
+  if(name==='products' && !prodsLoaded) loadProds();
+  if(name==='analytics' && !analyticsLoaded) loadAnalytics();
+  if(name==='templates' && !templatesLoaded) loadTemplates();
+  if(name==='builder'){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('panel-visible'));
+    setTimeout(animatePanels,80);
+    initCardObserver();
+    setTimeout(autoFillPricesFromTemplates, 300);
+  }
+}
+
+function togglePanel(id){ g(id).classList.toggle('open'); }
+
+// ══════════════════════════════════════════════════════════
+// BACKGROUND
+// ══════════════════════════════════════════════════════════
+function loadBg(input){
+  const file=input.files[0]; if(!file) return;
+  bgFile=file;
+  readFile(file,url=>{
+    bgDataUrl=url; applyBg(url); setUzImg('uz-bg','uz-bg-prev',url); autosave();
+  });
+}
+function applyBg(url){
+  ['pbg1','pbg2','pbg3'].forEach(id=>g(id).style.backgroundImage=`url('${url}')`);
+  document.querySelectorAll('.bonus-bg').forEach(el=>el.style.backgroundImage=`url('${url}')`);
+}
+function setUzImg(uzId,prevId,url){
+  g(uzId).classList.add('has-img');
+  g(prevId).style.backgroundImage=`url('${url}')`;
+}
+
+// ══════════════════════════════════════════════════════════
+// CARD UPLOADS — fully independent per card
+// card 1 = front shirt
+// card 2 = back shirt
+// card 3 = tagline/dual image — INDEPENDENT
+// ══════════════════════════════════════════════════════════
+function quickCard(input, cardNum){
+  const file=input.files[0]; if(!file) return;
+  readFile(file,url=>{
+    cardImgs[cardNum].file = file;
+    cardImgs[cardNum].url  = url;
+    applyCardImg(cardNum, url);
+
+    if(cardNum===1){
+      if(!variants.length) buildVariant('#1a1a1a',null,null,null);
+      variants[0].frontFile=file; variants[0].fUrl=url;
+      updateVarPrev(0,'f',url);
+    }
+    if(cardNum===2){
+      if(!variants.length) buildVariant('#1a1a1a',null,null,null);
+      variants[0].backFile=file; variants[0].bUrl=url;
+      updateVarPrev(0,'b',url);
+    }
+    // card 3 — store independently as c3Url on the first variant
+    if(cardNum===3){
+      if(!variants.length) buildVariant('#1a1a1a',null,null,null);
+      variants[0].card3File=file; variants[0].c3Url=url;
+    }
+    autosave();
+  });
+}
+
+function applyCardImg(cardNum, url){
+  const slId = ['psl1','psl2','psl3'][cardNum-1];
+  const cardId = ['pc1','pc2','pc3'][cardNum-1];
+  const hintId = ['ph1','ph2','ph3'][cardNum-1];
+  const sl=g(slId), card=g(cardId), hint=g(hintId);
+  if(sl) sl.style.backgroundImage=`url('${url}')`;
+  if(card) card.classList.add('has-img');
+  if(hint) hint.style.pointerEvents='none';
+}
+
+// ══════════════════════════════════════════════════════════
+// PRODUCT NAME SYNC
+// Product name → card 3 bottom text zone
+// Tagline → storefront header (not on card)
+// ══════════════════════════════════════════════════════════
+function syncName(){
+  const v=val('f-name'); const c=g('p-name-card');
+  if(c&&v) c.textContent=v;
+}
+function syncNameFromCard(el){ set('f-name',el.textContent); autosave(); }
+
+// ══════════════════════════════════════════════════════════
+// COLOR VARIANTS
+// ══════════════════════════════════════════════════════════
+function previewHex(v){ g('hex-dot').style.background=(v.startsWith('#')?v:'#'+v); }
+
+function addVariant(){
+  let hex=g('hex-inp').value.trim();
+  if(!hex) return toast('Enter a hex code','err');
+  if(!hex.startsWith('#')) hex='#'+hex;
+  if(!/^#[0-9a-fA-F]{6}$/.test(hex)) return toast('Invalid hex — use 6 digits e.g. #1a1a1a','err');
+  buildVariant(hex,null,null);
+  g('hex-inp').value=''; g('hex-dot').style.background='#333'; autosave();
+}
+
+function buildVariant(hex,fUrl,bUrl,c3Url){
+  const idx=variants.length;
+  variants.push({hex,frontFile:null,backFile:null,card3File:null,fUrl,bUrl,c3Url});
+  const block=document.createElement('div');
+  block.className='cvb'; block.id=`cvb-${idx}`;
+  block.innerHTML=`
+    <div class="cvb-head">
+      <div class="cvb-sw" style="background:${hex}"></div>
+      <span class="cvb-hex">${hex}</span>
+      <button class="cvb-rm" onclick="removeVariant(${idx})">Remove</button>
+    </div>
+    <div class="cvb-imgs">
+      <div class="cvi-slot ${fUrl?'has-img':''}" id="cvs-f-${idx}">
+        <input type="file" accept="image/*" onchange="loadVarImg(this,${idx},'f')">
+        <div class="cvi-lbl">Front</div>
+        <div class="cvi-prev" id="cvp-f-${idx}" style="${fUrl?`background-image:url('${fUrl}')`:``}"></div>
+      </div>
+      <div class="cvi-slot ${bUrl?'has-img':''}" id="cvs-b-${idx}">
+        <input type="file" accept="image/*" onchange="loadVarImg(this,${idx},'b')">
+        <div class="cvi-lbl">Back</div>
+        <div class="cvi-prev" id="cvp-b-${idx}" style="${bUrl?`background-image:url('${bUrl}')`:``}"></div>
+      </div>
+    </div>`;
+  g('variants-list').appendChild(block);
+  // Only slot 0 drives cards 1 & 2 preview initially
+  if(idx===0){
+    if(fUrl) applyCardImg(1,fUrl);
+    if(bUrl) applyCardImg(2,bUrl);
+    // card 3 is NEVER driven by variant upload — only by quickCard(3)
+  }
+  rebuildColorStrip();
+}
+
+function loadVarImg(input,idx,side){
+  const file=input.files[0]; if(!file) return;
+  readFile(file,url=>{
+    if(side==='f'){ variants[idx].frontFile=file; variants[idx].fUrl=url; }
+    else          { variants[idx].backFile=file;  variants[idx].bUrl=url; }
+    updateVarPrev(idx,side,url);
+    // Variant slot 0 upload updates cards 1 & 2 ONLY
+    if(idx===0){
+      if(side==='f'){ cardImgs[1].url=url; applyCardImg(1,url); }
+      if(side==='b'){ cardImgs[2].url=url; applyCardImg(2,url); }
+      // Card 3 is untouched
+    }
+    autosave();
+  });
+}
+
+function updateVarPrev(idx,side,url){
+  const sl=g(`cvs-${side}-${idx}`), pr=g(`cvp-${side}-${idx}`);
+  if(sl&&pr){ sl.classList.add('has-img'); pr.style.backgroundImage=`url('${url}')`; }
+}
+
+function removeVariant(idx){
+  variants.splice(idx,1);
+  const saved=[...variants]; variants=[];
+  g('variants-list').innerHTML='';
+  saved.forEach(v=>buildVariant(v.hex,v.fUrl,v.bUrl,v.c3Url));
+  autosave();
+}
+
+function rebuildColorStrip(){
+  g('color-strip').innerHTML=variants.map((v,i)=>
+    `<div class="col-btn ${i===0?'active':''}" style="background:${v.hex}" onclick="switchColor(${i})" title="${v.hex}"></div>`
+  ).join('');
+}
+
+function switchColor(idx){
+  const v=variants[idx];
+  document.querySelectorAll('.col-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  // Switching colors updates cards 1 & 2 only — card 3 stays independent
+  if(v.fUrl){ g('psl1').style.backgroundImage=`url('${v.fUrl}')`;g('pc1').classList.add('has-img'); }
+  if(v.bUrl){ g('psl2').style.backgroundImage=`url('${v.bUrl}')`;g('pc2').classList.add('has-img'); }
+}
+
+// ══════════════════════════════════════════════════════════
+// PRICING
+// ══════════════════════════════════════════════════════════
+function addPrice(tier){ prices[tier].push({label:'',amount:''}); renderTier(tier); autosave(); }
+function removePrice(tier,idx){ prices[tier].splice(idx,1); renderTier(tier); autosave(); }
+function renderTier(tier){
+  const c=g('tp-'+tier);
+  if(!prices[tier].length){ c.innerHTML='<div class="tier-empty">No prices</div>'; return; }
+  c.innerHTML=prices[tier].map((p,i)=>`
+    <div class="price-row">
+      <input type="text" placeholder="e.g. Heavyweight Cotton" value="${esc(p.label)}" oninput="prices['${tier}'][${i}].label=this.value;autosave()">
+      <input type="number" class="pr-amt" placeholder="₦ Amount" value="${p.amount}" oninput="prices['${tier}'][${i}].amount=this.value;autosave()">
+      <button class="pr-rm" onclick="removePrice('${tier}',${i})">✕</button>
+    </div>`).join('');
+}
+function renderAllTiers(){ ['premium','best','affordable'].forEach(renderTier); }
+function setDefTier(t){
+  defTier=t;
+  document.querySelectorAll('.def-btn').forEach(b=>b.classList.toggle('active',b.dataset.tier===t));
+  autosave();
+}
+
+// ══════════════════════════════════════════════════════════
+// BONUS ITEMS
+// ══════════════════════════════════════════════════════════
+function addBonus(){ pushBonus(null,''); }
+function pushBonus(dataUrl,label){
+  const idx=bonusItems.length;
+  bonusItems.push({file:null,dataUrl,label});
+  renderBonusGrid();
+  if(dataUrl) addBonusCard(idx,dataUrl,label);
+}
+function renderBonusGrid(){
+  g('bonus-grid').innerHTML=bonusItems.map((b,i)=>`
+    <div class="bonus-item ${b.dataUrl?'has-img':''}" id="bi-${i}">
+      <input type="file" accept="image/*" onchange="loadBonusImg(this,${i})">
+      <span class="bi-icon">＋</span>
+      <div class="bi-prev" style="${b.dataUrl?`background-image:url('${b.dataUrl}')`:``}"></div>
+      <input class="bi-inp" type="text" placeholder="Label" value="${esc(b.label)}"
+        oninput="bonusItems[${i}].label=this.value;updateBonusLbl(${i},this.value);autosave()" onclick="event.stopPropagation()">
+    </div>`).join('')+`<div class="bonus-item bonus-add" onclick="addBonus()"><span class="ba-plus">+</span></div>`;
+}
+function loadBonusImg(input,idx){
+  const file=input.files[0]; if(!file) return;
+  bonusItems[idx].file=file;
+  readFile(file,url=>{ bonusItems[idx].dataUrl=url; renderBonusGrid(); updateBonusCard(idx,url,bonusItems[idx].label); autosave(); });
+}
+function addBonusCard(idx,imgUrl,label){
+  const stack=g('card-stack');
+  const w=document.createElement('div');
+  w.className='cw'; w.id=`bcw-${idx}`;
+  w.innerHTML=`
+    <div class="card card-top card-bonus" id="bc-${idx}">
+      <div class="bg-layer bonus-bg" id="bbg-${idx}" style="${bgDataUrl?`background-image:url('${bgDataUrl}')`:``}"></div>
+      <div class="bonus-center"><div class="bonus-img-layer" id="bimg-${idx}" style="background-image:url('${imgUrl}')"></div></div>
+      <div class="blend-layer"><div class="top-logo"><span class="logo-jp">デマーク</span><span class="logo-en">D e m ā k u</span></div></div>
+      <div class="dotted-divider"></div>
+      <div class="text-zone" id="blbl-${idx}" contenteditable="true" data-placeholder="Limited edition extras"
+        spellcheck="false" oninput="bonusItems[${idx}].label=this.textContent;autosave()">${label||''}</div>
+    </div>
+    <span class="clbl">Slide ${4+idx} · Bonus</span>`;
+  stack.appendChild(w);
+  triggerNewCardAnim(w);
+}
+function updateBonusCard(idx,imgUrl,label){
+  const img=g(`bimg-${idx}`);
+  if(img) img.style.backgroundImage=`url('${imgUrl}')`;
+  else    addBonusCard(idx,imgUrl,label||'');
+  const lbl=g(`blbl-${idx}`); if(lbl&&label) lbl.textContent=label;
+}
+function updateBonusLbl(idx,label){ const e=g(`blbl-${idx}`); if(e) e.textContent=label; }
+
+// ══════════════════════════════════════════════════════════
+// UPLOAD
+// ══════════════════════════════════════════════════════════
+function handleUpload(){
+  const sb=getSB();
+  if(!sb){ toast('Add your Supabase keys to the file first','err'); return; }
+  if(!val('f-name').trim()||!val('f-code').trim()) return toast('Name and code required','err');
+  if(!variants.length) return toast('Add at least one color variant','err');
+  if(editingId){
+    openModal('Replace Product?','All existing images will be deleted and re-uploaded. Continue?',doUpload);
+  } else { doUpload(); }
+}
+
+async function doUpload(){
+  closeModal();
+  const btn=g('upload-btn'); btn.disabled=true;
+  setProgress(0,'Starting…');
+  const sb=getSB();
+  try{
+    const name=val('f-name').trim(), code=val('f-code').trim(), tagline=val('f-tagline').trim();
+    if(editingId){ setProgress(5,'Removing old…'); await purgeFiles(editingId); await sb.from('products').delete().eq('id',editingId); }
+    let bgUrl=null;
+    if(bgFile||bgDataUrl){ setProgress(10,'Uploading background…'); bgUrl=await upBlob(bgFile,bgDataUrl,`backgrounds/${code}-${Date.now()}.jpg`); }
+    setProgress(18,'Creating product record…');
+    const {data:prod,error:pe}=await sb.from('products').insert({name,product_code:code,tagline,background_image_url:bgUrl,default_tier:defTier,published:true}).select().single();
+    if(pe) throw pe;
+    const pid=prod.id;
+    for(let i=0;i<variants.length;i++){
+      const v=variants[i]; setProgress(20+(i/variants.length)*35,`Variant ${i+1}/${variants.length}…`);
+      let fUrl=null,bUrl=null,c3Url=null;
+      if(v.frontFile||v.fUrl) fUrl=await upBlob(v.frontFile,v.fUrl,`shirts/${code}-${Date.now()}-${i}-f.png`);
+      if(v.backFile||v.bUrl)  bUrl=await upBlob(v.backFile, v.bUrl, `shirts/${code}-${Date.now()}-${i}-b.png`);
+      if(v.card3File||v.c3Url) c3Url=await upBlob(v.card3File,v.c3Url,`shirts/${code}-${Date.now()}-${i}-c3.png`);
+      await sb.from('product_variants').insert({product_id:pid,color_hex:v.hex,front_image_url:fUrl,back_image_url:bUrl,card3_image_url:c3Url,sort_order:i});
+    }
+    setProgress(60,'Saving prices…');
+    const rows=[];
+    ['premium','best','affordable'].forEach(t=>prices[t].forEach((p,i)=>{ if(p.amount) rows.push({product_id:pid,tier:t,label:p.label,amount:parseFloat(p.amount),sort_order:i}); }));
+    if(rows.length) await sb.from('product_prices').insert(rows);
+    const bf=bonusItems.filter(b=>b.dataUrl);
+    for(let i=0;i<bf.length;i++){
+      const b=bf[i]; setProgress(65+(i/Math.max(bf.length,1))*25,`Extras ${i+1}/${bf.length}…`);
+      const iu=await upBlob(b.file,b.dataUrl,`bonus/${code}-${Date.now()}-${i}.png`);
+      await sb.from('product_bonus_items').insert({product_id:pid,image_url:iu,label:b.label,sort_order:i});
+    }
+    setProgress(100,'Uploaded!');
+    setTimeout(()=>{ hideProgress(); btn.disabled=false; toast('Product saved in this demo','ok'); clearDraft(); resetBuilder(); },1200);
+  }catch(err){
+    console.error(err); hideProgress(); btn.disabled=false;
+    toast(navigator.onLine?'Upload failed — check console':'Lost connection','err');
+  }
+}
+
+async function upBlob(file,dataUrl,path){
+  let blob;
+  if(file) blob=file;
+  else if(dataUrl){ const r=await fetch(dataUrl); blob=await r.blob(); }
+  else return null;
+  const sb=getSB();
+  const {error}=await sb.storage.from(BUCKET).upload(path,blob,{upsert:true});
+  if(error) throw error;
+  return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+async function purgeFiles(pid){
+  const sb=getSB();
+  const {data:p}=await sb.from('products').select('background_image_url').eq('id',pid).single();
+  const {data:vs}=await sb.from('product_variants').select('front_image_url,back_image_url').eq('product_id',pid);
+  const {data:bs}=await sb.from('product_bonus_items').select('image_url').eq('product_id',pid);
+  const tp=u=>{ if(!u)return null; const s=u.split(`/${BUCKET}/`); return s[1]||null; };
+  const paths=[tp(p?.background_image_url),...(vs||[]).flatMap(v=>[tp(v.front_image_url),tp(v.back_image_url)]),...(bs||[]).map(b=>tp(b.image_url))].filter(Boolean);
+  if(paths.length) await sb.storage.from(BUCKET).remove(paths);
+}
+
+// ══════════════════════════════════════════════════════════
+// PROGRESS
+// ══════════════════════════════════════════════════════════
+function setProgress(pct,msg){ g('prog-bar').classList.add('active');g('up-stat').classList.add('active');g('prog-fill').style.width=pct+'%';g('up-stat').textContent=msg; }
+function hideProgress(){ g('prog-bar').classList.remove('active');g('up-stat').classList.remove('active');g('prog-fill').style.width='0%'; }
+
+// ══════════════════════════════════════════════════════════
+// PRODUCTS VIEW
+// ══════════════════════════════════════════════════════════
+async function loadProds(){
+  const grid=g('products-grid');
+  grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="es-jp">読</span><span class="es-txt">Loading…</span></div>`;
+  const sb=getSB();
+  if(!sb){ grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="es-jp">!</span><span class="es-txt">Add Supabase keys to the file</span></div>`; return; }
+  const {data,error}=await sb.from('products').select('*').order('created_at',{ascending:false});
+  if(error){ toast('Failed to load products','err'); return; }
+  allProds=data||[]; prodsLoaded=true; renderProdGrid(allProds);
+}
+function renderProdGrid(list){
+  const grid=g('products-grid');
+  if(!list.length){ grid.innerHTML=`<div class="empty-state"><span class="es-jp">空</span><span class="es-txt">No products yet</span></div>`; return; }
+  grid.innerHTML=list.map(p=>`
+    <div class="prod-card">
+      <div class="pc-thumb" style="background-image:url('${p.background_image_url||''}')">
+        <div class="pc-thumb-ov"></div>
+        <span class="pc-badge ${p.published?'live':''}">${p.published?'Live':'Draft'}</span>
+      </div>
+      <div class="pc-body">
+        <span class="pc-code">${esc(p.product_code)}</span>
+        <div class="pc-name">${esc(p.name)}</div>
+        <div class="pc-chips"><span class="pc-chip">${p.default_tier}</span><span class="pc-chip">${new Date(p.created_at).toLocaleDateString('en-GB')}</span></div>
+      </div>
+      <div class="pc-acts">
+        <button class="btn" onclick="editProd('${p.id}')">Edit</button>
+        <button class="btn danger" onclick="deleteProd('${p.id}','${esc(p.name)}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+function filterProducts(q){
+  const l=q.toLowerCase().trim();
+  if(!l){ document.querySelectorAll('#products-grid .prod-card').forEach(c=>c.style.display=''); return; }
+  document.querySelectorAll('#products-grid .prod-card').forEach(c=>{
+    const name=c.querySelector('.pc-name')?.textContent.toLowerCase()||'';
+    const code=c.querySelector('.pc-code')?.textContent.toLowerCase()||'';
+    c.style.display=(name.includes(l)||code.includes(l))?'':'none';
+  });
+}
+async function editProd(pid){
+  toast('Loading product…');
+  const sb=getSB();
+  const {data:p}=await sb.from('products').select('*').eq('id',pid).single();
+  const {data:vs}=await sb.from('product_variants').select('*').eq('product_id',pid).order('sort_order');
+  const {data:pr}=await sb.from('product_prices').select('*').eq('product_id',pid).order('sort_order');
+  const {data:bs}=await sb.from('product_bonus_items').select('*').eq('product_id',pid).order('sort_order');
+  const d={
+    code:p.product_code,name:p.name,tagline:p.tagline||'',bgDataUrl:p.background_image_url,
+    defTier:p.default_tier,editingId:pid,
+    cardImgs:{1:{url:null},2:{url:null},3:{url:null}},
+    variants:(vs||[]).map(v=>({hex:v.color_hex,fUrl:v.front_image_url,bUrl:v.back_image_url,c3Url:v.card3_image_url})),
+    prices:{premium:[],best:[],affordable:[]},
+    bonus:(bs||[]).map(b=>({dataUrl:b.image_url,label:b.label||''}))
+  };
+  // Use first variant images for card 1 & 2
+  if(vs&&vs.length){
+    d.cardImgs[1]={url:vs[0].front_image_url};
+    d.cardImgs[2]={url:vs[0].back_image_url};
+  }
+  (pr||[]).forEach(r=>{ if(d.prices[r.tier]) d.prices[r.tier].push({label:r.label||'',amount:r.amount}); });
+  localStorage.setItem('dmk_draft',JSON.stringify(d));
+  resetBuilder(); loadDraft(); showView('builder');
+}
+async function deleteProd(pid,name){
+  openModal('Delete Product?',`"${name}" and all its images will be permanently deleted.`,async()=>{
+    closeModal(); toast('Deleting…'); const sb=getSB();
+    await purgeFiles(pid); await sb.from('products').delete().eq('id',pid);
+    toast('Deleted','ok'); prodsLoaded=false; loadProds();
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// RESET
+// ══════════════════════════════════════════════════════════
+function confirmClear(){ openModal('Clear Builder?','All unsaved work will be lost.',()=>{ closeModal(); clearDraft(); resetBuilder(); }); }
+function resetBuilder(){
+  set('f-code',''); set('f-name',''); set('f-tagline','');
+  bgFile=null; bgDataUrl=null;
+  cardImgs={1:{file:null,url:null},2:{file:null,url:null},3:{file:null,url:null}};
+  variants=[]; prices={premium:[],best:[],affordable:[]}; bonusItems=[]; editingId=null;
+  g('variants-list').innerHTML=''; g('uz-bg').classList.remove('has-img'); g('uz-bg-prev').style.backgroundImage='';
+  renderAllTiers(); renderBonusGrid();
+  ['pbg1','pbg2','pbg3'].forEach(id=>g(id).style.backgroundImage='');
+  ['psl1','psl2','psl3'].forEach(id=>g(id).style.backgroundImage='');
+  ['pc1','pc2','pc3'].forEach(id=>g(id).classList.remove('has-img'));
+  ['ph1','ph2','ph3'].forEach(id=>g(id).style.pointerEvents='auto');
+  const nc=g('p-name-card'); if(nc) nc.textContent='';
+  g('color-strip').innerHTML='';
+  document.querySelectorAll('[id^="bcw-"]').forEach(e=>e.remove());
+  setDefTier('best'); updateModeLbl();
+  // Re-init card observer for the reset state
+  document.querySelectorAll('.cw').forEach(c=>c.classList.remove('card-visible'));
+  setTimeout(initCardObserver,100);
+}
+function updateModeLbl(){ g('mode-lbl').textContent=editingId?'Editing Product':'New Product'; }
+
+// ══════════════════════════════════════════════════════════
+// MODAL / TOAST
+// ══════════════════════════════════════════════════════════
+function openModal(title,text,cb){ g('modal-title').textContent=title; g('modal-text').textContent=text; g('modal-ok').onclick=cb; g('modal').classList.add('open'); }
+function closeModal(){ g('modal').classList.remove('open'); }
+
+let toastT;
+function toast(msg,type=''){ const t=g('toast'); t.textContent=msg; t.className='toast show '+(type||''); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3200); }
+
+// ══════════════════════════════════════════════════════════
+// OFFLINE DETECTION
+// ══════════════════════════════════════════════════════════
+window.addEventListener('offline',()=>{ g('offline-banner').classList.add('show'); toast('No internet connection','err'); });
+window.addEventListener('online', ()=>{ g('offline-banner').classList.remove('show'); toast('Back online','ok'); });
+
+// ══════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════
+function g(id){ return document.getElementById(id); }
+function val(id){ return (g(id)||{}).value||''; }
+function set(id,v){ const e=g(id); if(e) e.value=v; }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function readFile(file,cb){ const r=new FileReader(); r.onload=e=>cb(e.target.result); r.readAsDataURL(file); }
+
+// ══════════════════════════════════════════════════════════
+// PRICE TEMPLATES
+// ══════════════════════════════════════════════════════════
+let tplData = {premium:[],best:[],affordable:[]};
+
+async function loadTemplates(){
+  const sb2=getSB(); if(!sb2) return;
+  const{data}=await sb2.from('price_templates').select('*').order('sort_order');
+  tplData={premium:[],best:[],affordable:[]};
+  (data||[]).forEach(r=>{ if(tplData[r.tier]) tplData[r.tier].push({id:r.id,label:r.label,amount:r.amount}); });
+  templatesLoaded=true;
+  renderTemplates();
+}
+
+function renderTemplates(){
+  ['premium','best','affordable'].forEach(tier=>{
+    const c=g('tpl-'+tier); if(!c)return;
+    if(!tplData[tier].length){c.innerHTML='<div class="tier-empty">No templates</div>';return;}
+    c.innerHTML=tplData[tier].map((p,i)=>`
+      <div class="price-row">
+        <input type="text" placeholder="Shirt type name" value="${esc2(p.label)}" oninput="tplData['${tier}'][${i}].label=this.value">
+        <input type="number" class="pr-amt" placeholder="₦ Amount" value="${p.amount}" oninput="tplData['${tier}'][${i}].amount=this.value">
+        <button class="pr-rm" onclick="removeTplRow('${tier}',${i})">✕</button>
+      </div>`).join('');
+  });
+}
+
+function addTemplateRow(tier){
+  tplData[tier].push({id:null,label:'',amount:''});
+  renderTemplates();
+}
+function removeTplRow(tier,idx){
+  tplData[tier].splice(idx,1);
+  renderTemplates();
+}
+
+async function saveTemplates(){
+  const sb2=getSB(); if(!sb2){toast('Configure keys first','err');return;}
+  toast('Saving templates…');
+  // Delete all existing and re-insert
+  await sb2.from('price_templates').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  const rows=[];
+  ['premium','best','affordable'].forEach(tier=>{
+    tplData[tier].forEach((p,i)=>{
+      if(p.label&&p.amount) rows.push({tier,label:p.label,amount:parseFloat(p.amount),sort_order:i});
+    });
+  });
+  if(rows.length){ const{error}=await getSB().from('price_templates').insert(rows); if(error){toast('Save failed','err');return;} }
+  toast('Templates saved','ok');
+  templatesLoaded=false;
+  await loadTemplates();
+}
+
+// Auto-fill prices from templates when opening builder
+async function autoFillPricesFromTemplates(){
+  if(prices.premium.length||prices.best.length||prices.affordable.length) return; // already has prices
+  if(!tplData.premium.length&&!tplData.best.length&&!tplData.affordable.length){
+    await loadTemplates();
+  }
+  ['premium','best','affordable'].forEach(tier=>{
+    prices[tier]=[...tplData[tier].map(t=>({label:t.label,amount:t.amount}))];
+  });
+  renderAllTiers();
+}
+
+// ══════════════════════════════════════════════════════════
+// ANALYTICS
+// ══════════════════════════════════════════════════════════
+let seriesRows=[]; // {id, name, units_sold}
+
+async function loadAnalytics(){
+  const sb2=getSB(); if(!sb2) return;
+  toast('Loading analytics…');
+  const[visRes,prodRes,salesRes]=await Promise.all([
+    sb2.from('visitor_log').select('id',{count:'exact',head:true}),
+    sb2.from('products').select('id,tagline',{count:'exact'}).eq('published',true),
+    sb2.from('series_sales').select('*').order('series_name')
+  ]);
+  const visitors=visRes.count||0;
+  const prodCount=prodRes.count||0;
+  // count unique taglines as series
+  const taglines=[...new Set((prodRes.data||[]).map(p=>p.tagline).filter(Boolean))];
+  const totalSold=(salesRes.data||[]).reduce((a,r)=>a+r.units_sold,0);
+  if(g('astat-visitors'))g('astat-visitors').textContent=visitors.toLocaleString();
+  if(g('astat-products'))g('astat-products').textContent=prodCount;
+  if(g('astat-series'))g('astat-series').textContent=taglines.length;
+  if(g('astat-sold'))g('astat-sold').textContent=totalSold.toLocaleString();
+  seriesRows=salesRes.data||[];
+  taglines.forEach(t=>{if(!seriesRows.find(s=>s.series_name===t))seriesRows.push({id:null,series_name:t,units_sold:0});});
+  analyticsLoaded=true;
+  renderSeriesTable();
+}
+
+function renderSeriesTable(){
+  const tbl=g('series-table'); if(!tbl)return;
+  if(!seriesRows.length){tbl.innerHTML='<div class="empty-state"><span class="es-txt">No series yet — add one or create products with a collection tag</span></div>';return;}
+  tbl.innerHTML=seriesRows.map((s,i)=>`
+    <div class="series-row">
+      <input type="text" placeholder="Series name" value="${esc2(s.series_name)}" oninput="seriesRows[${i}].series_name=this.value">
+      <div class="sr-count">
+        <button onclick="adjustSales(${i},-1)">−</button>
+        <span class="sr-num">${s.units_sold||0}</span>
+        <button onclick="adjustSales(${i},1)">+</button>
+      </div>
+      <button class="pr-rm" onclick="saveSeriesRow(${i})" title="Save" style="font-size:10px;letter-spacing:1px;padding:4px 8px;border:1px solid var(--border);background:none;color:var(--text-low);cursor:pointer">Save</button>
+      <button class="pr-rm" onclick="deleteSeriesRow(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addSeriesRow(){
+  seriesRows.push({id:null,series_name:'',units_sold:0});
+  renderSeriesTable();
+}
+
+function adjustSales(idx,dir){
+  seriesRows[idx].units_sold=Math.max(0,(seriesRows[idx].units_sold||0)+dir);
+  renderSeriesTable();
+  saveSeriesRow(idx);
+}
+
+async function saveSeriesRow(idx){
+  const sb2=getSB(); if(!sb2)return;
+  const row=seriesRows[idx];
+  if(!row.series_name.trim())return;
+  const{data,error}=await sb2.from('series_sales').upsert({
+    ...(row.id?{id:row.id}:{}),
+    series_name:row.series_name.trim(),
+    units_sold:row.units_sold||0,
+    updated_at:new Date().toISOString()
+  },{onConflict:'series_name'}).select().single();
+  if(!error&&data){seriesRows[idx].id=data.id;}
+  loadAnalytics();
+}
+
+async function deleteSeriesRow(idx){
+  const sb2=getSB(); if(!sb2)return;
+  const row=seriesRows[idx];
+  if(row.id) await sb2.from('series_sales').delete().eq('id',row.id);
+  seriesRows.splice(idx,1);
+  renderSeriesTable();
+  loadAnalytics();
+}
+
+function esc2(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+
+// ── BEFOREUNLOAD WARNING ──────────────────────
+window.addEventListener('beforeunload', e => {
+  const d = localStorage.getItem('dmk_draft');
+  if (!d) return;
+  try {
+    const parsed = JSON.parse(d);
+    if (parsed.name || parsed.code || (parsed.variants && parsed.variants.length) || parsed.bgDataUrl) {
+      e.preventDefault();
+      e.returnValue = 'You have unsaved work in the builder. Close anyway?';
+      return e.returnValue;
+    }
+  } catch(err) {}
+});
+
+</script>
+</body>
+</html>
